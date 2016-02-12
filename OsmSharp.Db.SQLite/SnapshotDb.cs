@@ -498,7 +498,7 @@ namespace OsmSharp.Db.SQLite
             command.Parameters.AddWithValue("id", id);
 
             Node node = null;
-            using (var reader = new DbDataReaderWrapper(command.ExecuteReader()))
+            using (var reader = command.ExecuteReaderWrapper())
             {
                 if (reader.Read())
                 {
@@ -507,10 +507,10 @@ namespace OsmSharp.Db.SQLite
             }
             if (node != null)
             {
-                command = this.GetCommand("SELECT * FROM node_tags WHERE way_id = :id");
+                command = this.GetCommand("SELECT * FROM node_tags WHERE node_id = :id");
                 command.Parameters.AddWithValue("id", id);
 
-                using (var reader = new DbDataReaderWrapper(command.ExecuteReader()))
+                using (var reader = command.ExecuteReaderWrapper())
                 {
                     if (reader.Read())
                     {
@@ -530,7 +530,7 @@ namespace OsmSharp.Db.SQLite
             command.Parameters.AddWithValue("id", id);
 
             Way way = null;
-            using (var reader = new DbDataReaderWrapper(command.ExecuteReader()))
+            using (var reader = command.ExecuteReaderWrapper())
             {
                 if (reader.Read())
                 {
@@ -542,7 +542,7 @@ namespace OsmSharp.Db.SQLite
                 command = this.GetCommand("SELECT * FROM way_nodes WHERE way_id = :id ORDER BY sequence_id");
                 command.Parameters.AddWithValue("id", id);
 
-                using (var reader = new DbDataReaderWrapper(command.ExecuteReader()))
+                using (var reader = command.ExecuteReaderWrapper())
                 {
                     if (reader.Read())
                     {
@@ -553,7 +553,7 @@ namespace OsmSharp.Db.SQLite
                 command = this.GetCommand("SELECT * FROM way_tags WHERE way_id = :id");
                 command.Parameters.AddWithValue("id", id);
 
-                using (var reader = new DbDataReaderWrapper(command.ExecuteReader()))
+                using (var reader = command.ExecuteReaderWrapper())
                 {
                     if (reader.Read())
                     {
@@ -573,7 +573,7 @@ namespace OsmSharp.Db.SQLite
             command.Parameters.AddWithValue("id", id);
 
             Relation relation = null;
-            using (var reader = new DbDataReaderWrapper(command.ExecuteReader()))
+            using (var reader = command.ExecuteReaderWrapper())
             {
                 if (reader.Read())
                 {
@@ -585,7 +585,7 @@ namespace OsmSharp.Db.SQLite
                 command = this.GetCommand("SELECT * FROM relation_members WHERE relation_id = :id ORDER BY sequence_id");
                 command.Parameters.AddWithValue("id", id);
 
-                using (var reader = new DbDataReaderWrapper(command.ExecuteReader()))
+                using (var reader = command.ExecuteReaderWrapper())
                 {
                     if (reader.Read())
                     {
@@ -596,7 +596,7 @@ namespace OsmSharp.Db.SQLite
                 command = this.GetCommand("SELECT * FROM relation_tags WHERE relation_id = :id");
                 command.Parameters.AddWithValue("id", id);
 
-                using (var reader = new DbDataReaderWrapper(command.ExecuteReader()))
+                using (var reader = command.ExecuteReaderWrapper())
                 {
                     if (reader.Read())
                     {
