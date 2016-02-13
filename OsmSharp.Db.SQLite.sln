@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OsmSharp.Db.SQLite", "OsmSh
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OsmSharp.Db.SQLite.Test", "OsmSharp.Db.SQLite.Test\OsmSharp.Db.SQLite.Test.csproj", "{129777EE-888E-4D9F-B309-1087F60C65F6}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OsmSharp.Db.SQLite.Test.Functional", "OsmSharp.Db.SQLite.Test.Functional\OsmSharp.Db.SQLite.Test.Functional.csproj", "{9CB15EDE-DDBB-4A49-8193-9ADD3FB067B7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -31,8 +33,8 @@ Global
 		{5C4BCE30-FBB8-408A-B702-33DFF5CC4A36}.Release|x86.Build.0 = Release|x86
 		{129777EE-888E-4D9F-B309-1087F60C65F6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{129777EE-888E-4D9F-B309-1087F60C65F6}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{129777EE-888E-4D9F-B309-1087F60C65F6}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{129777EE-888E-4D9F-B309-1087F60C65F6}.Debug|x64.Build.0 = Debug|Any CPU
+		{129777EE-888E-4D9F-B309-1087F60C65F6}.Debug|x64.ActiveCfg = Debug|x64
+		{129777EE-888E-4D9F-B309-1087F60C65F6}.Debug|x64.Build.0 = Debug|x64
 		{129777EE-888E-4D9F-B309-1087F60C65F6}.Debug|x86.ActiveCfg = Debug|Any CPU
 		{129777EE-888E-4D9F-B309-1087F60C65F6}.Debug|x86.Build.0 = Debug|Any CPU
 		{129777EE-888E-4D9F-B309-1087F60C65F6}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -41,6 +43,18 @@ Global
 		{129777EE-888E-4D9F-B309-1087F60C65F6}.Release|x64.Build.0 = Release|Any CPU
 		{129777EE-888E-4D9F-B309-1087F60C65F6}.Release|x86.ActiveCfg = Release|Any CPU
 		{129777EE-888E-4D9F-B309-1087F60C65F6}.Release|x86.Build.0 = Release|Any CPU
+		{9CB15EDE-DDBB-4A49-8193-9ADD3FB067B7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9CB15EDE-DDBB-4A49-8193-9ADD3FB067B7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9CB15EDE-DDBB-4A49-8193-9ADD3FB067B7}.Debug|x64.ActiveCfg = Debug|x64
+		{9CB15EDE-DDBB-4A49-8193-9ADD3FB067B7}.Debug|x64.Build.0 = Debug|x64
+		{9CB15EDE-DDBB-4A49-8193-9ADD3FB067B7}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{9CB15EDE-DDBB-4A49-8193-9ADD3FB067B7}.Debug|x86.Build.0 = Debug|Any CPU
+		{9CB15EDE-DDBB-4A49-8193-9ADD3FB067B7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9CB15EDE-DDBB-4A49-8193-9ADD3FB067B7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9CB15EDE-DDBB-4A49-8193-9ADD3FB067B7}.Release|x64.ActiveCfg = Release|Any CPU
+		{9CB15EDE-DDBB-4A49-8193-9ADD3FB067B7}.Release|x64.Build.0 = Release|Any CPU
+		{9CB15EDE-DDBB-4A49-8193-9ADD3FB067B7}.Release|x86.ActiveCfg = Release|Any CPU
+		{9CB15EDE-DDBB-4A49-8193-9ADD3FB067B7}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

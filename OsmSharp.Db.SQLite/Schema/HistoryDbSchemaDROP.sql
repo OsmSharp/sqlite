@@ -6,3 +6,4 @@ drop table if exists way_nodes;
 drop table if exists relation;
 drop table if exists relation_tags;
 drop table if exists relation_members;
+drop table if exists changesets;

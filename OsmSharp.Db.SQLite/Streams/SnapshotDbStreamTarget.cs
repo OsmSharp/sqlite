@@ -28,7 +28,7 @@ using System.Data;
 namespace OsmSharp.Db.SQLite.Streams
 {
 	/// <summary>
-	/// Data processor target for SQLite.
+	/// An osm stream to write data to a SnapshotDb.
 	/// </summary>
 	public class SnapshotDbStreamTarget : OsmStreamTarget
 	{
@@ -313,20 +313,6 @@ namespace OsmSharp.Db.SQLite.Streams
                 }
 			}
 			_connection = (SQLiteConnection)null;
-		}
-	}
-
-    /// <summary>
-    /// Common database extensions.
-    /// </summary>
-	public static class Extensions
-	{
-        /// <summary>
-        /// Converts the given value into a proper db value.
-        /// </summary>
-		public static object ConvertToDBValue<T>(this T? nullable) where T : struct
-		{
-			return nullable.HasValue ? (object) nullable.Value : DBNull.Value;
 		}
 	}
 }

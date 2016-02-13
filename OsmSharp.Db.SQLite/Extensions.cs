@@ -30,6 +30,14 @@ namespace OsmSharp.Db.SQLite
     public static class Extensions
     {
         /// <summary>
+        /// Converts the given value into a proper db value.
+        /// </summary>
+		public static object ConvertToDBValue<T>(this T? nullable) where T : struct
+        {
+            return nullable.HasValue ? (object)nullable.Value : DBNull.Value;
+        }
+
+        /// <summary>
         /// Ticks since 1/1/1970
         /// </summary>
         public static long EpochTicks = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).Ticks;

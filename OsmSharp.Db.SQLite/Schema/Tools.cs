@@ -21,7 +21,6 @@
 // THE SOFTWARE.
 
 using OsmSharp.Db.SQLite.Logging;
-using System;
 using System.Data.SQLite;
 using System.IO;
 using System.Reflection;
@@ -36,9 +35,9 @@ namespace OsmSharp.Db.SQLite.Schema
         private static Logger _logger = new Logger("Schema.Tools");
 
         /// <summary>
-        /// Creates/detects the snapshot db schema.
+        /// Detects a snapshot db.
         /// </summary>
-        public static void SnapshotDbCreateAndDetect(SQLiteConnection connection)
+        public static bool SnapshotDbDetect(SQLiteConnection connection)
         {
             //check if Simple Schema table exists
             const string sql = "SELECT count(*) FROM sqlite_master WHERE type='table' AND name='node';";
@@ -46,15 +45,21 @@ namespace OsmSharp.Db.SQLite.Schema
             using (var cmd = new SQLiteCommand(sql, connection))
             {
                 res = cmd.ExecuteScalar();
-            }            
-            if ((long)res == 1)
-            {
-                return;
             }
+            return ((long)res == 1);
+        }
 
-            _logger.Log(TraceEventType.Information,
-                    "Creating snapshot database schema...");
-            ExecuteSQL(connection, "SnapshotDbSchemaDDL.sql");
+        /// <summary>
+        /// Creates/detects the snapshot db schema.
+        /// </summary>
+        public static void SnapshotDbCreateAndDetect(SQLiteConnection connection)
+        {
+            if (!SnapshotDbDetect(connection))
+            {
+                _logger.Log(TraceEventType.Information,
+                        "Creating snapshot database schema...");
+                ExecuteSQL(connection, "SnapshotDbSchemaDDL.sql");
+            }
         }
 
         /// <summary>
@@ -64,6 +69,52 @@ namespace OsmSharp.Db.SQLite.Schema
         {
             _logger.Log(TraceEventType.Information, "Dropping snapshot database schema...");
             ExecuteSQL(connection, "SnapshotDbSchemaDROP.sql");
+        }
+
+        /// <summary>
+        /// Detects a history db.
+        /// </summary>
+        public static bool HistoryDbDetect(SQLiteConnection connection)
+        {
+            //check if Simple Schema table exists
+            const string sql = "SELECT count(*) FROM sqlite_master WHERE type='table' AND name='node';";
+            object res;
+            using (var cmd = new SQLiteCommand(sql, connection))
+            {
+                res = cmd.ExecuteScalar();
+            }
+            return ((long)res == 1);
+        }
+
+        /// <summary>
+        /// Creates/detects the history db schema.
+        /// </summary>
+        public static void HistoryDbCreateAndDetect(SQLiteConnection connection)
+        {
+            //check if Simple Schema table exists
+            const string sql = "SELECT count(*) FROM sqlite_master WHERE type='table' AND name='node';";
+            object res;
+            using (var cmd = new SQLiteCommand(sql, connection))
+            {
+                res = cmd.ExecuteScalar();
+            }
+            if ((long)res == 1)
+            {
+                return;
+            }
+
+            _logger.Log(TraceEventType.Information,
+                    "Creating history database schema...");
+            ExecuteSQL(connection, "HistoryDbSchemaDDL.sql");
+        }
+
+        /// <summary>
+        /// Drops the history schema.
+        /// </summary>
+        public static void HistoryDbDropSchema(SQLiteConnection connection)
+        {
+            _logger.Log(TraceEventType.Information, "Dropping history database schema...");
+            ExecuteSQL(connection, "HistoryDbSchemaDROP.sql");
         }
 
         /// <summary>
