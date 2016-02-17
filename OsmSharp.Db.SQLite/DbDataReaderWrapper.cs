@@ -98,6 +98,19 @@ namespace OsmSharp.Db.SQLite
         }
 
         /// <summary>
+        /// Returns true if the data for the given column is null.
+        /// </summary>
+        public bool IsDBNull(string name)
+        {
+            int i = -1;
+            if (!_columnIndexes.TryGetValue(name, out i))
+            {
+                throw new ArgumentOutOfRangeException(name);
+            }
+            return this.IsDBNull(i);
+        }
+
+        /// <summary>
         /// Gets a boolean.
         /// </summary>
         public bool GetBoolean(string name)

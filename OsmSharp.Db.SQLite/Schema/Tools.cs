@@ -72,6 +72,15 @@ namespace OsmSharp.Db.SQLite.Schema
         }
 
         /// <summary>
+        /// Deletes all data in the snapshot schema.
+        /// </summary>
+        public static void SnapshotDbDeleteAll(SQLiteConnection connection)
+        {
+            _logger.Log(TraceEventType.Information, "Delete all data in snapshot database schema...");
+            ExecuteSQL(connection, "SnapshotDbSchemaDELETE.sql");
+        }
+
+        /// <summary>
         /// Detects a history db.
         /// </summary>
         public static bool HistoryDbDetect(SQLiteConnection connection)

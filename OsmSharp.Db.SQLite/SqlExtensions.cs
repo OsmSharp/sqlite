@@ -58,6 +58,11 @@ namespace OsmSharp.Db.SQLite
 
             node.Latitude = (float)reader.GetInt32("latitude") / 10000000;
             node.Longitude = (float)reader.GetInt32("longitude") / 10000000;
+
+            if (reader.HasColumn("node_id"))
+            { // the tags column was joined in, also read the tags.
+                reader.AddTags(node);                
+            }
         }
 
         /// <summary>
@@ -76,6 +81,15 @@ namespace OsmSharp.Db.SQLite
         public static void BuildWay(this DbDataReaderWrapper reader, Way way)
         {
             reader.BuildOsmGeo(way);
+
+            if (reader.HasColumn("way_id") && reader.HasColumn("key"))
+            { // the tags column was joined in, also read the tags.
+                reader.AddTags(way);
+            }
+            else if (reader.HasColumn("way_id") && reader.HasColumn("sequence_id") && reader.HasColumn("node_id"))
+            { // the tags column was joined in, also read the tags.
+                reader.AddNodes(way);
+            }
         }
 
         /// <summary>
@@ -94,6 +108,15 @@ namespace OsmSharp.Db.SQLite
         public static void BuildRelation(this DbDataReaderWrapper reader, Relation relation)
         {
             reader.BuildOsmGeo(relation);
+
+            if (reader.HasColumn("relation_id") && !reader.HasColumn("member_id"))
+            { // the tags column was joined in, also read the tags.
+                reader.AddTags(relation);
+            }
+            else if (reader.HasColumn("relation_id") && reader.HasColumn("member_id"))
+            { // the members table was joined in, also read the members.
+                reader.AddMembers(relation);
+            }
         }
 
         /// <summary>
@@ -125,6 +148,12 @@ namespace OsmSharp.Db.SQLite
         /// </summary>
         public static void AddTags(this DbDataReaderWrapper reader, OsmGeo osmGeo, string idColumn)
         {
+            if (reader.IsDBNull(idColumn))
+            { // no tags.
+                reader.Read();
+                return;
+            }
+
             if (reader.HasActiveRow)
             {
                 if (!reader.HasColumn("version"))
@@ -139,6 +168,10 @@ namespace OsmSharp.Db.SQLite
 
                         if (!reader.Read())
                         { // move to next record.
+                            break;
+                        }
+                        if (reader.IsDBNull(idColumn))
+                        { // no tags anymore.
                             break;
                         }
                         id = reader.GetInt64(reader.GetOrdinal(idColumn));
@@ -158,6 +191,10 @@ namespace OsmSharp.Db.SQLite
 
                         if (!reader.Read())
                         { // move to next record.
+                            break;
+                        }
+                        if (reader.IsDBNull(idColumn))
+                        { // no tags anymore.
                             break;
                         }
                         id = reader.GetInt64(reader.GetOrdinal(idColumn));
@@ -297,6 +334,68 @@ namespace OsmSharp.Db.SQLite
                     relation.Members = relationMembers.ToArray();
                 }
             }
+        }
+        
+        /// <summary>
+        /// Executes a scalar and converts it to a long.
+        /// </summary>
+        public static long ExecuteScalarLong(this SQLiteCommand command, long dbNullValue = long.MinValue)
+        {
+            var obj = command.ExecuteScalar();
+            if (obj == null || obj == DBNull.Value)
+            {
+                return dbNullValue;
+            }
+            if (obj is int)
+            {
+                return (int)obj;
+            }
+            return (long)obj;
+        }
+
+        /// <summary>
+        /// Constructs a comma-seperated lists of the items in the given list.
+        /// </summary>
+        public static string BuildCommaSeperated<T>(this IList<T> values)
+        {
+            return SqlExtensions.BuildCommaSeperated(values, 0, values.Count);
+        }
+
+        /// <summary>
+        /// Constructs an id list for SQL for only the specified section of ids.
+        /// </summary>
+        public static string BuildCommaSeperated<T>(this IList<T> values, int start, int count)
+        {
+            var stringBuilder = new System.Text.StringBuilder();
+            if (values.Count > 0 && values.Count > start)
+            {
+                stringBuilder.Append(values[start].ToInvariantString());
+                for (var i = start + 1; i < count + start; i++)
+                {
+                    stringBuilder.Append(',');
+                    stringBuilder.Append(values[i].ToInvariantString());
+                }
+            }
+            return stringBuilder.ToString();
+        }
+
+        /// <summary>
+        /// Constructs an id list for SQL for only the specified section of ids.
+        /// </summary>
+        public static string BuildCommaSeperated<T>(this IEnumerable<T> values)
+        {
+            var stringBuilder = new System.Text.StringBuilder();
+            var isFirst = true;
+            foreach(var value in values)
+            {
+                if (!isFirst)
+                {
+                    stringBuilder.Append(',');
+                }
+                stringBuilder.Append(value.ToInvariantString());
+                isFirst = false;
+            }
+            return stringBuilder.ToString();
         }
     }
 }

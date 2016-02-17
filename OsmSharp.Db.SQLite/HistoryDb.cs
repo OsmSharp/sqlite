@@ -20,62 +20,60 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+using OsmSharp.Changesets;
+using OsmSharp.Streams;
 using System;
 using System.Collections.Generic;
-using OsmSharp.Streams;
-using OsmSharp.Changesets;
-using System.Data.SQLite;
 using System.Data;
-using System.Linq;
-using OsmSharp.Db.SQLite.Tiles;
+using System.Data.SQLite;
 
 namespace OsmSharp.Db.SQLite
 {
     /// <summary>
-    /// Implements a snapshot db storing a snapshot of OSM-data in an SQL-server database.
+    /// A history db.
     /// </summary>
-    public class SnapshotDb : ISnapshotDb, IDisposable
+    public class HistoryDb : IHistoryDb
     {
         private readonly string _connectionString; // Holds the connection string.
         private readonly bool _createAndDetectSchema; // Flag that indicates if the schema needs to be created if not present.
 
         /// <summary>
-        /// Creates a snapshot db.
+        /// Creates a history db.
         /// </summary>
-        public SnapshotDb(string connectionString)
+        public HistoryDb(string connectionString)
         {
             _connectionString = connectionString;
             _createAndDetectSchema = false;
         }
 
         /// <summary>
-        /// Creates a snapshot db.
+        /// Creates a history db.
         /// </summary>
-        public SnapshotDb(SQLiteConnection connection)
+        public HistoryDb(SQLiteConnection connection)
         {
             _connection = connection;
             _createAndDetectSchema = false;
         }
 
         /// <summary>
-        /// Creates a snapshot db.
+        /// Creates a history db.
         /// </summary>
-        public SnapshotDb(SQLiteConnection connection, bool createSchema)
+        public HistoryDb(SQLiteConnection connection, bool createSchema)
         {
             _connection = connection;
             _createAndDetectSchema = createSchema;
         }
 
         /// <summary>
-        /// Creates a snapshot db.
+        /// Creates a history db.
         /// </summary>
-        public SnapshotDb(string connectionString, bool createSchema)
+        public HistoryDb(string connectionString, bool createSchema)
         {
             _connectionString = connectionString;
             _createAndDetectSchema = createSchema;
         }
 
-        private SQLiteConnection _connection; // Holds the connection to the SQLServer db.
+        private SQLiteConnection _connection; // Holds the connection to the db.
 
         /// <summary>
         /// Gets the connection.
@@ -108,7 +106,7 @@ namespace OsmSharp.Db.SQLite
         /// </summary>
         public OsmStreamSource Get()
         {
-            return new Streams.SnapshotDbStreamSource(this.GetConnection());
+            throw new NotImplementedException();
         }
 
         /// <summary>
@@ -116,119 +114,7 @@ namespace OsmSharp.Db.SQLite
         /// </summary>
         public IEnumerable<OsmGeo> Get(float minLatitude, float minLongitude, float maxLatitude, float maxLongitude)
         {
-            var boxes = new List<long>();
-            var tileRange = TileRange.CreateAroundBoundingBox(minLatitude, minLongitude, maxLatitude, maxLongitude, 14);
-            foreach (var tile in tileRange)
-            {
-                boxes.Add((long)tile.Id);
-            }
-
-            // read all nodes in bounding box.               
-            var command = this.GetCommand(string.Format(
-                "select * from node left outer join node_tags on node.id = node_tags.node_id where (tile in ({0})) AND (latitude >= :minlat AND latitude < :maxlat AND longitude >= :minlon AND longitude < :maxlon) order by id",
-                    boxes.BuildCommaSeperated()));
-            command.Parameters.AddWithValue("minlat", (long)(minLatitude * 10000000));
-            command.Parameters.AddWithValue("maxlat", (long)(maxLatitude * 10000000));
-            command.Parameters.AddWithValue("minlon", (long)(minLongitude * 10000000));
-            command.Parameters.AddWithValue("maxlon", (long)(maxLongitude * 10000000));
-            var reader = command.ExecuteReaderWrapper();
-            var nodeIds = new List<long>();
-            var nodes = new List<Node>();
-            if (reader.Read())
-            {
-                while (reader.HasActiveRow)
-                {
-                    var node = reader.BuildNode();
-                    nodeIds.Add(node.Id.Value);
-                    nodes.Add(node);
-                }
-            }
-
-            // get ways.
-            var extraNodeIds = new List<long>();
-            var wayIds = new HashSet<long>();
-            command = this.GetCommand(string.Format(
-                "select distinct * from way left outer join way_nodes on way.id = way_nodes.way_id where way_id in (select distinct way_id from way join way_nodes on way.id = way_nodes.way_id where node_id in ({0})) order by id, sequence_id", nodeIds.BuildCommaSeperated()));
-            reader = command.ExecuteReaderWrapper();
-            var ways = new List<Way>();
-            if (reader.Read())
-            {
-                while(reader.HasActiveRow)
-                {
-                    var way = reader.BuildWay();
-                    wayIds.Add(way.Id.Value);
-                    ways.Add(way);
-
-                    if (way.Nodes != null)
-                    {
-                        foreach (var n in way.Nodes)
-                        {
-                            if (!nodeIds.Contains(n) &&
-                                !extraNodeIds.Contains(n))
-                            {
-                                extraNodeIds.Add(n);
-                            }
-                        }
-                    }
-                }
-            }
-
-            // get way tags.
-            command = this.GetCommand(string.Format(
-                "select * from way_tags where way_id in ({0}) order by way_id", wayIds.BuildCommaSeperated()));
-            reader = command.ExecuteReaderWrapper();
-            if (reader.Read())
-            {
-                var wayEnumerator = ways.GetEnumerator();
-                while (reader.HasActiveRow &&
-                    wayEnumerator.MoveNext())
-                {
-                    reader.AddTags(wayEnumerator.Current);
-                }
-            }
-
-            // get relations.
-            command = this.GetCommand(string.Format(
-                "select * from relation left outer join relation_members on relation.id = relation_members.relation_id where id in (select distinct relation_id from relation_members where (member_id in ({0}) and member_type = 0) or (member_id in ({1}) or member_type = 1)) order by id, sequence_id",
-                    nodeIds.BuildCommaSeperated(), wayIds.BuildCommaSeperated()));
-            reader = command.ExecuteReaderWrapper();
-            var relations = new List<Relation>();
-            var relationIds = new List<long>();
-            if (reader.Read())
-            {
-                while (reader.HasActiveRow)
-                {
-                    var relation = reader.BuildRelation();
-                    relations.Add(relation);
-                    relationIds.Add(relation.Id.Value);
-                }
-            }
-
-            // get relation tags.
-            command = this.GetCommand(string.Format(
-                "select * from relation_tags where relation_id in ({0}) order by relation_id", relationIds.BuildCommaSeperated()));
-            reader = command.ExecuteReaderWrapper();
-            if (reader.Read())
-            {
-                var relationEnumerator = relations.GetEnumerator();
-                while (reader.HasActiveRow &&
-                    relationEnumerator.MoveNext())
-                {
-                    reader.AddTags(relationEnumerator.Current);
-                }
-            }
-
-            // get extra nodes.
-            var extraNodes = this.Get(OsmGeoType.Node, extraNodeIds);
-            foreach(var node in extraNodes)
-            {
-                nodes.Add(node as Node);
-            }
-            nodes.Sort((x, y) => x.Id.Value.CompareTo(y.Id.Value));
-
-            return nodes.Cast<OsmGeo>().Concat(
-                ways.Cast<OsmGeo>()).Concat(
-                    relations.Cast<OsmGeo>());
+            throw new NotImplementedException();
         }
 
         /// <summary>
@@ -236,7 +122,7 @@ namespace OsmSharp.Db.SQLite
         /// </summary>
         public void Clear()
         {
-            Schema.Tools.SnapshotDbDeleteAll(this.GetConnection());
+            Schema.Tools.HistoryDbDropSchema(this.GetConnection());
         }
 
         /// <summary>
@@ -274,7 +160,7 @@ namespace OsmSharp.Db.SQLite
         {
             foreach (var osmGeo in osmGeos)
             {
-                this.AddOrUpdate(osmGeo);
+                this.AddOrUpdate(osmGeos);
             }
         }
 
@@ -320,37 +206,37 @@ namespace OsmSharp.Db.SQLite
             {
                 case OsmGeoType.Node:
                     command = this.GetCommand(
-                        string.Format("DELETE FROM node_tags WHERE node_id IN ({0})",
+                        string.Format("DELETE FROM node_tag WHERE (node_id IN ({0})",
                             id.ToInvariantString()));
                     command.ExecuteNonQuery();
                     command = this.GetCommand(
-                        string.Format("DELETE FROM node WHERE id IN ({0})",
+                        string.Format("DELETE FROM node WHERE (id IN ({0})",
                             id.ToInvariantString()));
                     break;
                 case OsmGeoType.Way:
                     command = this.GetCommand(
-                        string.Format("DELETE FROM way_tags WHERE way_id IN ({0})",
+                        string.Format("DELETE FROM way_tags WHERE (way_id IN ({0})",
                             id.ToInvariantString()));
                     command.ExecuteNonQuery();
                     command = this.GetCommand(
-                        string.Format("DELETE FROM way_nodes WHERE way_id IN ({0})",
+                        string.Format("DELETE FROM way_nodes WHERE (way_id IN ({0})",
                             id.ToInvariantString()));
                     command.ExecuteNonQuery();
                     command = this.GetCommand(
-                        string.Format("DELETE FROM way WHERE id IN ({0})",
+                        string.Format("DELETE FROM way WHERE (id IN ({0})",
                             id.ToInvariantString()));
                     break;
                 case OsmGeoType.Relation:
                     command = this.GetCommand(
-                        string.Format("DELETE FROM relation_tags WHERE relation_id IN ({0})",
+                        string.Format("DELETE FROM relation_tags WHERE (relation_id IN ({0})",
                             id.ToInvariantString()));
                     command.ExecuteNonQuery();
                     command = this.GetCommand(
-                        string.Format("DELETE FROM relation_members WHERE relation_id IN ({0})",
+                        string.Format("DELETE FROM relation_members WHERE (relation_id IN ({0})",
                             id.ToInvariantString()));
                     command.ExecuteNonQuery();
                     command = this.GetCommand(
-                        string.Format("DELETE FROM relation WHERE id IN ({0})",
+                        string.Format("DELETE FROM relation WHERE (id IN ({0})",
                             id.ToInvariantString()));
                     break;
             }
@@ -380,154 +266,9 @@ namespace OsmSharp.Db.SQLite
         /// <param name="changeset">The changeset to apply.</param>
         /// <param name="bestEffort">When false, it's the entire changeset or nothing. When true the changeset is applied using best-effort.</param>
         /// <returns>The diff result result object containing the diff result and status information.</returns>
-        public DiffResultResult ApplyChangeset(OsmChange changeset, bool bestEffort = true)
+        public DiffResultResult ApplyChangeset(OsmChange changeset, bool bestEffort = false)
         {
-            if (changeset == null) { throw new ArgumentNullException("changeset"); }
-            if (!bestEffort)
-            {
-                throw new NotSupportedException("A non-best effort strategy is not supported.");
-            }
-
-            var diffResults = new List<OsmGeoResult>();
-
-            if (changeset.Create != null &&
-                changeset.Create.Length > 0)
-            {
-                var highestNodeId = this.GetCommand("select max(id) from node").ExecuteScalarLong(0);
-                var highestWayId = this.GetCommand("select max(id) from way").ExecuteScalarLong(0);
-                var highestRelationId = this.GetCommand("select max(id) from relation").ExecuteScalarLong(0);
-
-                foreach (var create in changeset.Create)
-                {
-                    var oldId = create.Id;
-                    create.Version = 1;
-                    switch (create.Type)
-                    {
-                        case OsmGeoType.Node:
-                            highestNodeId++;
-                            create.Id = highestNodeId;
-                            this.AddOrUpdateNode(create as Node);
-                            diffResults.Add(new NodeResult()
-                            {
-                                NewId = create.Id,
-                                NewVersion = 1,
-                                OldId = oldId
-                            });
-                            break;
-                        case OsmGeoType.Way:
-                            highestWayId++;
-                            create.Id = highestWayId;
-                            this.AddOrUpdateWay(create as Way);
-                            diffResults.Add(new WayResult()
-                            {
-                                NewId = create.Id,
-                                NewVersion = 1,
-                                OldId = oldId
-                            });
-                            break;
-                        case OsmGeoType.Relation:
-                            highestRelationId++;
-                            create.Id = highestRelationId;
-                            this.AddOrUpdateRelation(create as Relation);
-                            diffResults.Add(new WayResult()
-                            {
-                                NewId = create.Id,
-                                NewVersion = 1,
-                                OldId = oldId
-                            });
-                            break;
-                    }
-                }
-            }
-
-            if (changeset.Modify != null)
-            {
-                foreach (var modify in changeset.Modify)
-                {
-                    var oldId = modify.Id;
-                    modify.Version = modify.Version + 1;
-                    switch (modify.Type)
-                    {
-                        case OsmGeoType.Node:
-                            if (this.AddOrUpdateNode(modify as Node))
-                            {
-                                diffResults.Add(new NodeResult()
-                                {
-                                    NewId = oldId,
-                                    NewVersion = modify.Version,
-                                    OldId = oldId
-                                });
-                            }
-                            break;
-                        case OsmGeoType.Way:
-                            if (this.AddOrUpdateWay(modify as Way))
-                            {
-                                diffResults.Add(new WayResult()
-                                {
-                                    NewId = oldId,
-                                    NewVersion = modify.Version,
-                                    OldId = oldId
-                                });
-                            }
-                            break;
-                        case OsmGeoType.Relation:
-                            if (this.AddOrUpdateRelation(modify as Relation))
-                            {
-                                diffResults.Add(new RelationResult()
-                                {
-                                    NewId = oldId,
-                                    NewVersion = modify.Version,
-                                    OldId = oldId
-                                });
-                            }
-                            break;
-                    }
-                }
-            }
-
-            if (changeset.Delete != null)
-            {
-                foreach (var delete in changeset.Delete)
-                {
-                    if (this.Delete(delete.Type, delete.Id.Value))
-                    {
-                        switch(delete.Type)
-                        {
-                            case OsmGeoType.Node:
-                                diffResults.Add(new NodeResult()
-                                {
-                                    NewId = null,
-                                    OldId = delete.Id.Value,
-                                    NewVersion = null
-                                });
-                                break;
-                            case OsmGeoType.Way:
-                                diffResults.Add(new WayResult()
-                                {
-                                    NewId = null,
-                                    OldId = delete.Id.Value,
-                                    NewVersion = null
-                                });
-                                break;
-                            case OsmGeoType.Relation:
-                                diffResults.Add(new RelationResult()
-                                {
-                                    NewId = null,
-                                    OldId = delete.Id.Value,
-                                    NewVersion = null
-                                });
-                                break;
-                        }
-                    }
-                }
-            }
-
-            return new DiffResultResult(new DiffResult()
-            {
-                Generator = "OsmSharp",
-                Results = diffResults.ToArray(),
-                Version = 0.6
-            }, DiffResultStatus.BestEffortOK);
+            throw new NotImplementedException();
         }
 
         /// <summary>
@@ -541,9 +282,8 @@ namespace OsmSharp.Db.SQLite
         /// <summary>
         /// Adds or updates a node.
         /// </summary>
-        private bool AddOrUpdateNode(Node node)
+        private void AddOrUpdateNode(Node node)
         {
-            var wasUpdate = true;
             var cmd = this.GetCommand("delete from node_tags where node_id = :node_id");
             cmd.Parameters.AddWithValue("node_id", node.Id.Value);
             cmd.ExecuteNonQuery();
@@ -579,7 +319,6 @@ namespace OsmSharp.Db.SQLite
                 cmd.Parameters.AddWithValue("usr_id", node.UserId.Value);
 
                 cmd.ExecuteNonQuery();
-                wasUpdate = false;
             }
 
             if (node.Tags != null)
@@ -595,15 +334,13 @@ namespace OsmSharp.Db.SQLite
                     cmd.ExecuteNonQuery();
                 }
             }
-            return wasUpdate;
         }
 
         /// <summary>
         /// Adds or updates a way.
         /// </summary>
-        private bool AddOrUpdateWay(Way way)
+        private void AddOrUpdateWay(Way way)
         {
-            var wasUpdate = true;
             var cmd = this.GetCommand("delete from way_tags where way_id = :way_id");
             cmd.Parameters.AddWithValue("way_id", way.Id.Value);
             cmd.ExecuteNonQuery();
@@ -640,9 +377,8 @@ namespace OsmSharp.Db.SQLite
                 cmd.Parameters.AddWithValue("usr_id", way.UserId.Value);
 
                 cmd.ExecuteNonQuery();
-                wasUpdate = false;
             }
-            
+
             if (way.Tags != null)
             {
                 cmd = this.GetCommand("INSERT into way_tags (way_id, key, value) VALUES (:way_id, :key, :value)");
@@ -670,15 +406,13 @@ namespace OsmSharp.Db.SQLite
                     cmd.ExecuteNonQuery();
                 }
             }
-            return wasUpdate;
         }
 
         /// <summary>
         /// Adds or updates a relation.
         /// </summary>
-        private bool AddOrUpdateRelation(Relation relation)
+        private void AddOrUpdateRelation(Relation relation)
         {
-            var wasUpdate = true;
             var cmd = this.GetCommand("delete from relation_tags where relation_id = :relation_id");
             cmd.Parameters.AddWithValue("relation_id", relation.Id.Value);
             cmd.ExecuteNonQuery();
@@ -715,7 +449,6 @@ namespace OsmSharp.Db.SQLite
                 cmd.Parameters.AddWithValue("usr_id", relation.UserId.Value);
 
                 cmd.ExecuteNonQuery();
-                wasUpdate = false;
             }
 
             if (relation.Tags != null)
@@ -749,7 +482,6 @@ namespace OsmSharp.Db.SQLite
                     cmd.ExecuteNonQuery();
                 }
             }
-            return wasUpdate;
         }
 
         /// <summary>
@@ -868,6 +600,51 @@ namespace OsmSharp.Db.SQLite
                 }
             }
             return relation;
+        }
+
+        public void Add(OsmGeo osmGeo)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Add(IEnumerable<OsmGeo> osmGeos)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Add(Changeset meta, OsmChange changes)
+        {
+            throw new NotImplementedException();
+        }
+
+        public OsmGeo Get(OsmGeoType type, long id, int version)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IList<OsmGeo> Get(OsmGeoType type, IList<long> id, IList<int> version)
+        {
+            throw new NotImplementedException();
+        }
+
+        public long OpenChangeset(Changeset info)
+        {
+            throw new NotImplementedException();
+        }
+
+        public DiffResultResult ApplyChangeset(long id, OsmChange changeset, bool bestEffort = false)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool UpdateChangesetInfo(Changeset info)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool CloseChangeset(long id)
+        {
+            throw new NotImplementedException();
         }
     }
 }

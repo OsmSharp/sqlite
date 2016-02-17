@@ -21,7 +21,9 @@
 // THE SOFTWARE.
 
 using NUnit.Framework;
+using OsmSharp.Changesets;
 using OsmSharp.Tags;
+using System.Collections.Generic;
 using System.Data.SQLite;
 
 namespace OsmSharp.Db.SQLite.Test
@@ -442,6 +444,672 @@ namespace OsmSharp.Db.SQLite.Test
             Assert.AreEqual(34, relation.Members[2].Id);
             Assert.AreEqual(OsmGeoType.Relation, relation.Members[2].Type);
             Assert.AreEqual("third", relation.Members[2].Role);
+        }
+
+        /// <summary>
+        /// Tests clearing all data from the database.
+        /// </summary>
+        [Test]
+        public void TestClear()
+        {
+            var connection = new SQLiteConnection("Data Source=:memory:;Version=3;New=True;");
+            var db = new SnapshotDb(connection);
+            db.AddOrUpdate(new Node()
+            {
+                Id = 1,
+                Latitude = 2,
+                Longitude = 3,
+                Tags = new TagsCollection(
+                        new Tag()
+                        {
+                            Key = "key0",
+                            Value = "value0"
+                        },
+                        new Tag()
+                        {
+                            Key = "key1",
+                            Value = "value1"
+                        }),
+                ChangeSetId = 12,
+                TimeStamp = new System.DateTime(2016, 01, 01),
+                UserId = 10,
+                UserName = "Ben",
+                Version = 1,
+                Visible = true
+            });
+            db.AddOrUpdate(new Way()
+            {
+                Id = 1,
+                Tags = new TagsCollection(
+                        new Tag()
+                        {
+                            Key = "key0",
+                            Value = "value0"
+                        },
+                        new Tag()
+                        {
+                            Key = "key1",
+                            Value = "value1"
+                        }),
+                Nodes = new long[]
+                    {
+                        12,
+                        23,
+                        34
+                    },
+                ChangeSetId = 12,
+                TimeStamp = new System.DateTime(2016, 01, 01),
+                UserId = 10,
+                UserName = "Ben",
+                Version = 1,
+                Visible = true
+            });
+            db.AddOrUpdate(new Relation()
+            {
+                Id = 1,
+                Tags = new TagsCollection(
+                        new Tag()
+                        {
+                            Key = "key0",
+                            Value = "value0"
+                        },
+                        new Tag()
+                        {
+                            Key = "key1",
+                            Value = "value1"
+                        }),
+                Members = new RelationMember[]
+                    {
+                        new RelationMember()
+                        {
+                            Id = 12,
+                            Role = "first",
+                            Type = OsmGeoType.Node
+                        },
+                        new RelationMember()
+                        {
+                            Id = 23,
+                            Role = "second",
+                            Type = OsmGeoType.Way
+                        },
+                        new RelationMember()
+                        {
+                            Id = 34,
+                            Role = "third",
+                            Type = OsmGeoType.Relation
+                        }
+                    },
+                ChangeSetId = 12,
+                TimeStamp = new System.DateTime(2016, 01, 01),
+                UserId = 10,
+                UserName = "Ben",
+                Version = 1,
+                Visible = true
+            });
+
+            db.Clear();
+
+            var node = db.GetNode(1);
+            Assert.IsNull(node);
+            var way = db.GetWay(1);
+            Assert.IsNull(way);
+            var relation = db.GetRelation(1);
+            Assert.IsNull(way);
+        }
+
+        /// <summary>
+        /// Tests getting nodes in a box.
+        /// </summary>
+        [Test]
+        public void TestGetNodesInBox()
+        {
+            var connection = new SQLiteConnection("Data Source=:memory:;Version=3;New=True;");
+            var db = new SnapshotDb(connection);
+            db.AddOrUpdate(new OsmGeo[]
+                {
+                    new Node()
+                    {
+                        Id = 1,
+                        Latitude = 1,
+                        Longitude = 1,
+                        ChangeSetId = 12,
+                        TimeStamp = new System.DateTime(2016, 01, 01),
+                        UserId = 10,
+                        UserName = "Ben",
+                        Version = 1,
+                        Visible = true
+                    }
+                });
+
+            var result = new List<OsmGeo>(db.Get(0.9f, 0.9f, 1.1f, 1.1f));
+            Assert.AreEqual(1, result.Count);
+            Assert.IsInstanceOf<Node>(result[0]);
+            var node = result[0] as Node;
+            Assert.AreEqual(1, node.Id);
+            Assert.IsNull(node.Tags);
+
+            connection = new SQLiteConnection("Data Source=:memory:;Version=3;New=True;");
+            db = new SnapshotDb(connection);
+            db.AddOrUpdate(new OsmGeo[]
+                {
+                    new Node()
+                    {
+                        Id = 1,
+                        Latitude = 1,
+                        Longitude = 1,
+                        ChangeSetId = 12,
+                        TimeStamp = new System.DateTime(2016, 01, 01),
+                        UserId = 10,
+                        UserName = "Ben",
+                        Version = 1,
+                        Visible = true
+                    },
+                    new Node()
+                    {
+                        Id = 2,
+                        Latitude = 2,
+                        Longitude = 2,
+                        ChangeSetId = 12,
+                        Tags = new TagsCollection(
+                            new Tag("highway", "residential")),
+                        TimeStamp = new System.DateTime(2016, 01, 01),
+                        UserId = 10,
+                        UserName = "Ben",
+                        Version = 1,
+                        Visible = true
+                    }
+                });
+
+            result = new List<OsmGeo>(db.Get(0.9f, 0.9f, 2.1f, 2.1f));
+            Assert.AreEqual(2, result.Count);
+            Assert.IsInstanceOf<Node>(result[0]);
+            node = result[0] as Node;
+            Assert.AreEqual(1, node.Id);
+            Assert.IsNull(node.Tags);
+            Assert.IsInstanceOf<Node>(result[1]);
+            node = result[1] as Node;
+            Assert.AreEqual(2, node.Id);
+            Assert.IsNotNull(node.Tags);
+            Assert.IsTrue(node.Tags.Contains("highway", "residential"));
+        }
+
+        /// <summary>
+        /// Tests getting ways in a box.
+        /// </summary>
+        [Test]
+        public void TestGetWaysInBox()
+        {
+            var connection = new SQLiteConnection("Data Source=:memory:;Version=3;New=True;");
+            var db = new SnapshotDb(connection);
+            db.AddOrUpdate(new OsmGeo[]
+                {
+                    new Node()
+                    {
+                        Id = 1,
+                        Latitude = 1,
+                        Longitude = 1,
+                        ChangeSetId = 12,
+                        TimeStamp = new System.DateTime(2016, 01, 01),
+                        UserId = 10,
+                        UserName = "Ben",
+                        Version = 1,
+                        Visible = true
+                    },
+                    new Node()
+                    {
+                        Id = 2,
+                        Latitude = 2,
+                        Longitude = 2,
+                        ChangeSetId = 12,
+                        TimeStamp = new System.DateTime(2016, 01, 01),
+                        UserId = 10,
+                        UserName = "Ben",
+                        Version = 1,
+                        Visible = true
+                    },
+                    new Node()
+                    {
+                        Id = 3,
+                        Latitude = 3,
+                        Longitude = 3,
+                        ChangeSetId = 12,
+                        TimeStamp = new System.DateTime(2016, 01, 01),
+                        UserId = 10,
+                        UserName = "Ben",
+                        Version = 1,
+                        Visible = true
+                    },
+                    new Node()
+                    {
+                        Id = 4,
+                        Latitude = 4,
+                        Longitude = 4,
+                        ChangeSetId = 12,
+                        TimeStamp = new System.DateTime(2016, 01, 01),
+                        UserId = 10,
+                        UserName = "Ben",
+                        Version = 1,
+                        Visible = true
+                    },
+                    new Way()
+                    {
+                        Id = 1,
+                        ChangeSetId = 12,
+                        Nodes = new long[] { 1, 2 },
+                        Tags = new TagsCollection(
+                            new Tag("highway", "residential")),
+                        TimeStamp = new System.DateTime(2016, 01, 01),
+                        UserId = 10,
+                        UserName = "Ben",
+                        Version = 1,
+                        Visible = true
+                    },
+                    new Way()
+                    {
+                        Id = 2,
+                        ChangeSetId = 12,
+                        Nodes = new long[] { 3, 4 },
+                        Tags = new TagsCollection(
+                            new Tag("highway", "secondary")),
+                        TimeStamp = new System.DateTime(2016, 01, 01),
+                        UserId = 10,
+                        UserName = "Ben",
+                        Version = 1,
+                        Visible = true
+                    }
+                });
+
+            var result = new List<OsmGeo>(db.Get(0.9f, 0.9f, 1.1f, 1.1f));
+            Assert.AreEqual(3, result.Count);
+            Assert.IsInstanceOf<Node>(result[0]);
+            var node = result[0] as Node;
+            Assert.AreEqual(1, node.Id);
+            Assert.IsNull(node.Tags);
+            Assert.IsInstanceOf<Node>(result[1]);
+            node = result[1] as Node;
+            Assert.AreEqual(2, node.Id);
+            Assert.IsNull(node.Tags);
+            Assert.IsInstanceOf<Way>(result[2]);
+            var way = result[2] as Way;
+            Assert.AreEqual(1, way.Id);
+            Assert.IsNotNull(way.Tags);
+            Assert.IsTrue(way.Tags.Contains("highway", "residential"));
+            Assert.IsNotNull(way.Nodes);
+            Assert.AreEqual(1, way.Nodes[0]);
+            Assert.AreEqual(2, way.Nodes[1]);
+
+            result = new List<OsmGeo>(db.Get(1.9f, 1.9f, 2.1f, 2.1f));
+            Assert.AreEqual(3, result.Count);
+            Assert.IsInstanceOf<Node>(result[0]);
+            node = result[0] as Node;
+            Assert.AreEqual(1, node.Id);
+            Assert.IsNull(node.Tags);
+            Assert.IsInstanceOf<Node>(result[1]);
+            node = result[1] as Node;
+            Assert.AreEqual(2, node.Id);
+            Assert.IsNull(node.Tags);
+            Assert.IsInstanceOf<Way>(result[2]);
+            way = result[2] as Way;
+            Assert.AreEqual(1, way.Id);
+            Assert.IsNotNull(way.Tags);
+            Assert.IsTrue(way.Tags.Contains("highway", "residential"));
+            Assert.IsNotNull(way.Nodes);
+            Assert.AreEqual(1, way.Nodes[0]);
+            Assert.AreEqual(2, way.Nodes[1]);
+
+            result = new List<OsmGeo>(db.Get(1.9f, 1.9f, 3.1f, 3.1f));
+            Assert.AreEqual(6, result.Count);
+            Assert.IsInstanceOf<Node>(result[0]);
+            node = result[0] as Node;
+            Assert.AreEqual(1, node.Id);
+            Assert.IsNull(node.Tags);
+            Assert.IsInstanceOf<Node>(result[1]);
+            node = result[1] as Node;
+            Assert.AreEqual(2, node.Id);
+            Assert.IsNull(node.Tags);
+            Assert.IsInstanceOf<Node>(result[2]);
+            node = result[2] as Node;
+            Assert.AreEqual(3, node.Id);
+            Assert.IsNull(node.Tags);
+            Assert.IsInstanceOf<Node>(result[3]);
+            node = result[3] as Node;
+            Assert.AreEqual(4, node.Id);
+            Assert.IsNull(node.Tags);
+            
+            way = result[4] as Way;
+            Assert.AreEqual(1, way.Id);
+            Assert.IsNotNull(way.Tags);
+            Assert.IsTrue(way.Tags.Contains("highway", "residential"));
+            Assert.IsNotNull(way.Nodes);
+            Assert.AreEqual(1, way.Nodes[0]);
+            Assert.AreEqual(2, way.Nodes[1]);
+
+            way = result[5] as Way;
+            Assert.AreEqual(2, way.Id);
+            Assert.IsNotNull(way.Tags);
+            Assert.IsTrue(way.Tags.Contains("highway", "secondary"));
+            Assert.IsNotNull(way.Nodes);
+            Assert.AreEqual(3, way.Nodes[0]);
+            Assert.AreEqual(4, way.Nodes[1]);
+        }
+
+        /// <summary>
+        /// Tests getting relations in a box.
+        /// </summary>
+        [Test]
+        public void TestGetRelationsInBox()
+        {
+            var connection = new SQLiteConnection("Data Source=:memory:;Version=3;New=True;");
+            var db = new SnapshotDb(connection);
+            db.AddOrUpdate(new OsmGeo[]
+                {
+                    new Node()
+                    {
+                        Id = 1,
+                        Latitude = 1,
+                        Longitude = 1,
+                        ChangeSetId = 12,
+                        TimeStamp = new System.DateTime(2016, 01, 01),
+                        UserId = 10,
+                        UserName = "Ben",
+                        Version = 1,
+                        Visible = true
+                    },
+                    new Node()
+                    {
+                        Id = 2,
+                        Latitude = 2,
+                        Longitude = 2,
+                        ChangeSetId = 12,
+                        TimeStamp = new System.DateTime(2016, 01, 01),
+                        UserId = 10,
+                        UserName = "Ben",
+                        Version = 1,
+                        Visible = true
+                    },
+                    new Node()
+                    {
+                        Id = 3,
+                        Latitude = 3,
+                        Longitude = 3,
+                        ChangeSetId = 12,
+                        TimeStamp = new System.DateTime(2016, 01, 01),
+                        UserId = 10,
+                        UserName = "Ben",
+                        Version = 1,
+                        Visible = true
+                    },
+                    new Node()
+                    {
+                        Id = 4,
+                        Latitude = 4,
+                        Longitude = 4,
+                        ChangeSetId = 12,
+                        TimeStamp = new System.DateTime(2016, 01, 01),
+                        UserId = 10,
+                        UserName = "Ben",
+                        Version = 1,
+                        Visible = true
+                    },
+                    new Way()
+                    {
+                        Id = 1,
+                        ChangeSetId = 12,
+                        Nodes = new long[] { 1, 2 },
+                        Tags = new TagsCollection(
+                            new Tag("highway", "residential")),
+                        TimeStamp = new System.DateTime(2016, 01, 01),
+                        UserId = 10,
+                        UserName = "Ben",
+                        Version = 1,
+                        Visible = true
+                    },
+                    new Way()
+                    {
+                        Id = 2,
+                        ChangeSetId = 12,
+                        Nodes = new long[] { 3, 4 },
+                        Tags = new TagsCollection(
+                            new Tag("highway", "secondary")),
+                        TimeStamp = new System.DateTime(2016, 01, 01),
+                        UserId = 10,
+                        UserName = "Ben",
+                        Version = 1,
+                        Visible = true
+                    },
+                    new Relation()
+                    {
+                        Id = 1,
+                        ChangeSetId = 12,
+                        Members = new RelationMember[]
+                        {
+                            new RelationMember()
+                            {
+                                Id = 1,
+                                Role = "role1",
+                                Type = OsmGeoType.Node
+                            },
+                            new RelationMember()
+                            {
+                                Id = 2,
+                                Role = "role2",
+                                Type = OsmGeoType.Node
+                            }
+                        },
+                        Tags = new TagsCollection(
+                            new Tag("type", "node_relation")),
+                        TimeStamp = new System.DateTime(2016, 01, 01),
+                        UserId = 10,
+                        UserName = "Ben",
+                        Version = 1,
+                        Visible = true
+                    },
+                    new Relation()
+                    {
+                        Id = 2,
+                        ChangeSetId = 12,
+                        Members = new RelationMember[]
+                        {
+                            new RelationMember()
+                            {
+                                Id = 1,
+                                Role = "role1",
+                                Type = OsmGeoType.Way
+                            },
+                            new RelationMember()
+                            {
+                                Id = 2,
+                                Role = "role2",
+                                Type = OsmGeoType.Way
+                            }
+                        },
+                        Tags = new TagsCollection(
+                            new Tag("type", "way_relation")),
+                        TimeStamp = new System.DateTime(2016, 01, 01),
+                        UserId = 10,
+                        UserName = "Ben",
+                        Version = 1,
+                        Visible = true
+                    }
+                });
+
+            var result = new List<OsmGeo>(db.Get(0.9f, 0.9f, 1.1f, 1.1f));
+            Assert.AreEqual(5, result.Count);
+            Assert.IsInstanceOf<Node>(result[0]);
+            var node = result[0] as Node;
+            Assert.AreEqual(1, node.Id);
+            Assert.IsNull(node.Tags);
+            Assert.IsInstanceOf<Node>(result[1]);
+            node = result[1] as Node;
+            Assert.AreEqual(2, node.Id);
+            Assert.IsNull(node.Tags);
+            Assert.IsInstanceOf<Way>(result[2]);
+            var way = result[2] as Way;
+            Assert.AreEqual(1, way.Id);
+            Assert.IsNotNull(way.Tags);
+            Assert.IsTrue(way.Tags.Contains("highway", "residential"));
+            Assert.IsNotNull(way.Nodes);
+            Assert.AreEqual(1, way.Nodes[0]);
+            Assert.AreEqual(2, way.Nodes[1]);
+
+            var relation = result[3] as Relation;
+            Assert.AreEqual(1, relation.Id);
+            Assert.IsNotNull(relation.Tags);
+            Assert.IsTrue(relation.Tags.Contains("type", "node_relation"));
+            Assert.IsNotNull(relation.Members);
+            Assert.AreEqual(1, relation.Members[0].Id);
+            Assert.AreEqual("role1", relation.Members[0].Role);
+            Assert.AreEqual(OsmGeoType.Node, relation.Members[0].Type);
+            Assert.AreEqual(2, relation.Members[1].Id);
+            Assert.AreEqual("role2", relation.Members[1].Role);
+            Assert.AreEqual(OsmGeoType.Node, relation.Members[1].Type);
+        }
+
+        /// <summary>
+        /// Tests deleting a node.
+        /// </summary>
+        [Test]
+        public void TestApplyChangesetDeleteNode()
+        {
+            var connection = new SQLiteConnection("Data Source=:memory:;Version=3;New=True;");
+            var db = new SnapshotDb(connection);
+
+            var node = new Node()
+            {
+                Id = 1,
+                Latitude = 2,
+                Longitude = 3,
+                Tags = new TagsCollection(
+                        new Tag()
+                        {
+                            Key = "key0",
+                            Value = "value0"
+                        },
+                        new Tag()
+                        {
+                            Key = "key1",
+                            Value = "value1"
+                        }),
+                ChangeSetId = 12,
+                TimeStamp = new System.DateTime(2016, 01, 01),
+                UserId = 10,
+                UserName = "Ben",
+                Version = 1,
+                Visible = true
+            };
+            db.AddOrUpdate(node);
+
+            var changeset = new OsmChange()
+            {
+                Delete = new OsmGeo[]
+                {
+                    node
+                }
+            };
+
+            var result = db.ApplyChangeset(changeset);
+            Assert.IsNotNull(result);
+            Assert.IsNotNull(result.Result);
+            Assert.IsNotNull(result.Result.Results);
+            Assert.AreEqual(1, result.Result.Results.Length);
+            Assert.IsInstanceOf<NodeResult>(result.Result.Results[0]);
+            var nodeResult = result.Result.Results[0];
+            Assert.AreEqual(1, nodeResult.OldId);
+            Assert.IsNull(nodeResult.NewId);
+            Assert.IsNull(nodeResult.NewVersion);
+
+            connection = new SQLiteConnection("Data Source=:memory:;Version=3;New=True;");
+            db = new SnapshotDb(connection);
+
+            node = new Node()
+            {
+                Id = 1,
+                Latitude = 4,
+                Longitude = 5,
+                Tags = new TagsCollection(
+                        new Tag()
+                        {
+                            Key = "key2",
+                            Value = "value2"
+                        },
+                        new Tag()
+                        {
+                            Key = "key3",
+                            Value = "value3"
+                        }),
+                ChangeSetId = 12,
+                TimeStamp = new System.DateTime(2016, 01, 01),
+                UserId = 10,
+                UserName = "Ben",
+                Version = 1,
+                Visible = true
+            };
+            db.AddOrUpdate(node);
+
+            changeset = new OsmChange()
+            {
+                Modify = new OsmGeo[]
+                {
+                    node
+                }
+            };
+
+            result = db.ApplyChangeset(changeset);
+            Assert.IsNotNull(result);
+            Assert.IsNotNull(result.Result);
+            Assert.IsNotNull(result.Result.Results);
+            Assert.AreEqual(1, result.Result.Results.Length);
+            Assert.IsInstanceOf<NodeResult>(result.Result.Results[0]);
+            nodeResult = result.Result.Results[0];
+            Assert.AreEqual(1, nodeResult.OldId);
+            Assert.AreEqual(1, nodeResult.NewId);
+            Assert.AreEqual(2, nodeResult.NewVersion);
+
+            connection = new SQLiteConnection("Data Source=:memory:;Version=3;New=True;");
+            db = new SnapshotDb(connection);
+
+            node = new Node()
+            {
+                Id = -1,
+                Latitude = 4,
+                Longitude = 5,
+                Tags = new TagsCollection(
+                        new Tag()
+                        {
+                            Key = "key2",
+                            Value = "value2"
+                        },
+                        new Tag()
+                        {
+                            Key = "key3",
+                            Value = "value3"
+                        }),
+                ChangeSetId = 12,
+                TimeStamp = new System.DateTime(2016, 01, 01),
+                UserId = 10,
+                UserName = "Ben",
+                Version = 1,
+                Visible = true
+            };
+
+            changeset = new OsmChange()
+            {
+                Create = new OsmGeo[]
+                {
+                    node
+                }
+            };
+
+            result = db.ApplyChangeset(changeset);
+            Assert.IsNotNull(result);
+            Assert.IsNotNull(result.Result);
+            Assert.IsNotNull(result.Result.Results);
+            Assert.AreEqual(1, result.Result.Results.Length);
+            Assert.IsInstanceOf<NodeResult>(result.Result.Results[0]);
+            nodeResult = result.Result.Results[0];
+            Assert.AreEqual(-1, nodeResult.OldId);
+            Assert.AreEqual(1, nodeResult.NewId);
+            Assert.AreEqual(1, nodeResult.NewVersion);
         }
     }
 }

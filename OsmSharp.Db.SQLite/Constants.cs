@@ -20,34 +20,16 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-using System;
-
 namespace OsmSharp.Db.SQLite
 {
-    internal static class TileCalculations
+    /// <summary>
+    /// Contains constants.
+    /// </summary>
+    public static class Constants
     {
-        public static long xy2tile(uint x, uint y)
-        {
-            uint tile = 0;
-            int i;
-
-            for (i = 15; i >= 0; i--)
-            {
-                tile = (tile << 1) | ((x >> i) & 1);
-                tile = (tile << 1) | ((y >> i) & 1);
-            }
-
-            return Convert.ToInt64(tile);
-        }
-
-        public static uint lon2x(double lon)
-        {
-            return (uint)System.Math.Floor(((lon + 180.0) * 65536.0 / 360.0));
-        }
-
-        public static uint lat2y(double lat)
-        {
-            return (uint)System.Math.Floor(((lat + 90.0) * 65536.0 / 180.0));
-        }
+        /// <summary>
+        /// The default zoom value to index on.
+        /// </summary>
+        public const int DefaultZoom = 14;
     }
 }

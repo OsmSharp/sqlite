@@ -180,8 +180,7 @@ namespace OsmSharp.Db.SQLite.Streams
             _insertNodeCmd.Parameters[3].Value = node.ChangeSetId.ConvertToDBValue();
             _insertNodeCmd.Parameters[4].Value = node.Visible.ConvertToDBValue();
             _insertNodeCmd.Parameters[5].Value = this.ConvertDateTime(node.TimeStamp);
-            _insertNodeCmd.Parameters[6].Value = TileCalculations.xy2tile((uint)TileCalculations.lon2x(node.Longitude.Value),
-                                                                          (uint)TileCalculations.lat2y(node.Latitude.Value));
+            _insertNodeCmd.Parameters[6].Value = Tiles.Tile.CreateAroundLocation(node.Latitude.Value, node.Longitude.Value, Constants.DefaultZoom).Id;
             _insertNodeCmd.Parameters[7].Value = node.Version.ConvertToDBValue();
             _insertNodeCmd.Parameters[8].Value = node.UserName;
             _insertNodeCmd.Parameters[9].Value = node.UserId.ConvertToDBValue();
