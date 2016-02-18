@@ -125,7 +125,7 @@ namespace OsmSharp.Db.SQLite
 
             // read all nodes in bounding box.               
             var command = this.GetCommand(string.Format(
-                "select * from node left outer join node_tags on node.id = node_tags.node_id where (tile in ({0})) AND (latitude >= :minlat AND latitude < :maxlat AND longitude >= :minlon AND longitude < :maxlon) order by id",
+                "select * from node left outer join node_tags on node.id = node_tags.node_id where (tile in ({0})) AND (visible=1) AND (latitude >= :minlat AND latitude < :maxlat AND longitude >= :minlon AND longitude < :maxlon) order by id",
                     boxes.BuildCommaSeperated()));
             command.Parameters.AddWithValue("minlat", (long)(minLatitude * 10000000));
             command.Parameters.AddWithValue("maxlat", (long)(maxLatitude * 10000000));
@@ -222,7 +222,10 @@ namespace OsmSharp.Db.SQLite
             var extraNodes = this.Get(OsmGeoType.Node, extraNodeIds);
             foreach (var node in extraNodes)
             {
-                nodes.Add(node as Node);
+                if (node != null)
+                {
+                    nodes.Add(node as Node);
+                }
             }
             nodes.Sort((x, y) => x.Id.Value.CompareTo(y.Id.Value));
 
