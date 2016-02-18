@@ -108,21 +108,21 @@ namespace OsmSharp.Db.SQLite.Streams
 
             var command = this.GetCommand("select * from node order by id, version");
             _nodeReader = new DbDataReaderWrapper(command.ExecuteReader());
-            command = this.GetCommand("select * from node_tags order by node_id, version");
+            command = this.GetCommand("select * from node_tags order by node_id, node_version");
             _nodeTagsReader = new DbDataReaderWrapper(command.ExecuteReader());
 
             command = this.GetCommand("select * from way order by id, version");
             _wayReader = new DbDataReaderWrapper(command.ExecuteReader());
-            command = this.GetCommand("select * from way_tags order by way_id, version");
+            command = this.GetCommand("select * from way_tags order by way_id, way_version");
             _wayTagsReader = new DbDataReaderWrapper(command.ExecuteReader());
-            command = this.GetCommand("select * from way_nodes order by way_id, version, sequence_id");
+            command = this.GetCommand("select * from way_nodes order by way_id, way_version, sequence_id");
             _wayNodesReader = new DbDataReaderWrapper(command.ExecuteReader());
 
             command = this.GetCommand("select * from relation order by id, version");
             _relationReader = new DbDataReaderWrapper(command.ExecuteReader());
-            command = this.GetCommand("select * from relation_tags order by relation_id, version");
+            command = this.GetCommand("select * from relation_tags order by relation_id, relation_version");
             _relationTagsReader = new DbDataReaderWrapper(command.ExecuteReader());
-            command = this.GetCommand("select * from relation_members order by relation_id, version, sequence_id");
+            command = this.GetCommand("select * from relation_members order by relation_id, relation_version, sequence_id");
             _relationMembersReader = new DbDataReaderWrapper(command.ExecuteReader());
         }
 

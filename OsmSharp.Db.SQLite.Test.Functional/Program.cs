@@ -32,9 +32,7 @@ namespace OsmSharp.Db.SQLite.Test.Functional
     {
         static void Main(string[] args)
         {
-            //// enable logging.
-            //OsmSharp.Logging.Log.Enable();
-            //OsmSharp.Logging.Log.RegisterListener(new ConsoleTraceListener());
+            // enable logging.
             OsmSharp.Logging.Logger.LogAction = (origin, level, message, parameters) =>
             {
                 Console.WriteLine("{0}:{1} - {2}", origin, level, message);

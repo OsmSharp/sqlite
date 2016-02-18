@@ -124,7 +124,7 @@ namespace OsmSharp.Db.SQLite
         /// </summary>
         public static void AddTags(this DbDataReaderWrapper reader, Node node)
         {
-            reader.AddTags(node, "node_id");
+            reader.AddTags(node, "node_id", "node_version");
         }
 
         /// <summary>
@@ -132,7 +132,7 @@ namespace OsmSharp.Db.SQLite
         /// </summary>
         public static void AddTags(this DbDataReaderWrapper reader, Way way)
         {
-            reader.AddTags(way, "way_id");
+            reader.AddTags(way, "way_id", "way_version");
         }
 
         /// <summary>
@@ -140,13 +140,13 @@ namespace OsmSharp.Db.SQLite
         /// </summary>
         public static void AddTags(this DbDataReaderWrapper reader, Relation relation)
         {
-            reader.AddTags(relation, "relation_id");
+            reader.AddTags(relation, "relation_id", "relation_version");
         }
 
         /// <summary>
         /// Adds all the tags to the given osmGeo object.
         /// </summary>
-        public static void AddTags(this DbDataReaderWrapper reader, OsmGeo osmGeo, string idColumn)
+        public static void AddTags(this DbDataReaderWrapper reader, OsmGeo osmGeo, string idColumn, string versionColumn)
         {
             if (reader.IsDBNull(idColumn))
             { // no tags.
@@ -156,7 +156,7 @@ namespace OsmSharp.Db.SQLite
 
             if (reader.HasActiveRow)
             {
-                if (!reader.HasColumn("version"))
+                if (!reader.HasColumn(versionColumn))
                 {
                     var id = reader.GetInt64(reader.GetOrdinal(idColumn));
                     osmGeo.Tags = new TagsCollection();
@@ -180,7 +180,7 @@ namespace OsmSharp.Db.SQLite
                 else
                 {
                     var id = reader.GetInt64(reader.GetOrdinal(idColumn));
-                    var version = reader.GetInt32("version");
+                    var version = reader.GetInt32(versionColumn);
                     osmGeo.Tags = new TagsCollection();
                     while (id == osmGeo.Id.Value &&
                         version == osmGeo.Version.Value)
@@ -198,7 +198,7 @@ namespace OsmSharp.Db.SQLite
                             break;
                         }
                         id = reader.GetInt64(reader.GetOrdinal(idColumn));
-                        version = reader.GetInt32("version");
+                        version = reader.GetInt32(versionColumn);
                     }
                 }
             }
@@ -225,7 +225,7 @@ namespace OsmSharp.Db.SQLite
         {
             if (reader.HasActiveRow)
             {
-                if (!reader.HasColumn("version"))
+                if (!reader.HasColumn("way_version"))
                 {
                     var wayId = reader.GetInt64("way_id");
                     var nodes = new List<long>();
@@ -249,7 +249,7 @@ namespace OsmSharp.Db.SQLite
                 else
                 {
                     var wayId = reader.GetInt64("way_id");
-                    var version = reader.GetInt32("version");
+                    var version = reader.GetInt32("way_version");
                     var nodes = new List<long>();
                     while (wayId == way.Id.Value &&
                         version == way.Version.Value)
@@ -266,7 +266,7 @@ namespace OsmSharp.Db.SQLite
                             break;
                         }
                         wayId = reader.GetInt64("way_id");
-                        version = reader.GetInt32("version");
+                        version = reader.GetInt32("way_version");
                     }
                     way.Nodes = nodes.ToArray();
                 }
@@ -280,7 +280,7 @@ namespace OsmSharp.Db.SQLite
         {
             if (reader.HasActiveRow)
             {
-                if (!reader.HasColumn("version"))
+                if (!reader.HasColumn("relation_version"))
                 {
                     var relationId = reader.GetInt64("relation_id");
                     var members = new List<RelationMember>();
@@ -311,7 +311,7 @@ namespace OsmSharp.Db.SQLite
                 else
                 {
                     var relationId = reader.GetInt64("relation_id");
-                    var version = reader.GetInt32("version");
+                    var version = reader.GetInt32("relation_version");
                     var relationMembers = new List<RelationMember>();
                     while (relationId == relation.Id.Value &&
                         version == relation.Version.Value)
@@ -329,7 +329,7 @@ namespace OsmSharp.Db.SQLite
                             break;
                         }
                         relationId = reader.GetInt64("relation_id");
-                        version = reader.GetInt32("version");
+                        version = reader.GetInt32("relation_version");
                     }
                     relation.Members = relationMembers.ToArray();
                 }
@@ -396,6 +396,18 @@ namespace OsmSharp.Db.SQLite
                 isFirst = false;
             }
             return stringBuilder.ToString();
+        }
+
+        /// <summary>
+        /// Converts a standard DateTime into the number of milliseconds since 1/1/1970.
+        /// </summary>
+        public static object ToUnixTimeDB(this DateTime? date)
+        {
+            if (!date.HasValue)
+            {
+                return DBNull.Value;
+            }
+            return date.Value.ToUnixTime();
         }
     }
 }

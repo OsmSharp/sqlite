@@ -31,5 +31,20 @@ namespace OsmSharp.Db.SQLite
         /// The default zoom value to index on.
         /// </summary>
         public const int DefaultZoom = 14;
+
+        /// <summary>
+        /// The create type.
+        /// </summary>
+        public const int CreateType = 0;
+
+        /// <summary>
+        /// The delete type.
+        /// </summary>
+        public const int DeleteType = 1;
+
+        /// <summary>
+        /// The modify type.
+        /// </summary>
+        public const int ModifyType = 2;
     }
 }

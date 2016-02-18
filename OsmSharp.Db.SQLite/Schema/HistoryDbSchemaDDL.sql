@@ -16,7 +16,7 @@
 CREATE TABLE IF NOT EXISTS [node_tags] 
 (
 	[node_id] INTEGER  NOT NULL,
-	[version] INTEGER  NOT NULL,
+	[node_version] INTEGER  NOT NULL,
 	[key] varchar(100) NOT NULL,
 	[value] varchar(500) NULL
 );
@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS [way]
 CREATE TABLE IF NOT EXISTS [way_tags] 
 (
 	[way_id] INTEGER  NOT NULL,
-	[version] INTEGER  NOT NULL,
+	[way_version] INTEGER  NOT NULL,
 	[key] varchar(100) NOT NULL,
 	[value] varchar(500) NULL
 );
@@ -44,7 +44,7 @@ CREATE TABLE IF NOT EXISTS [way_tags]
 CREATE TABLE IF NOT EXISTS [way_nodes]
 (
 	[way_id] INTEGER  NOT NULL,
-	[version] INTEGER  NOT NULL,
+	[way_version] INTEGER  NOT NULL,
 	[node_id] INTEGER  NOT NULL,
 	[sequence_id] INTEGER  NOT NULL,
 	PRIMARY KEY ([way_id],[node_id],[sequence_id])
@@ -65,7 +65,7 @@ CREATE TABLE IF NOT EXISTS [relation]
 CREATE TABLE IF NOT EXISTS [relation_tags]
 (
 	[relation_id] INTEGER NOT NULL,
-	[version] INTEGER  NOT NULL,
+	[relation_version] INTEGER  NOT NULL,
 	[key] varchar(100) NOT NULL,
 	[value] varchar(500) NULL
 );
@@ -73,7 +73,7 @@ CREATE TABLE IF NOT EXISTS [relation_tags]
 CREATE TABLE IF NOT EXISTS [relation_members]
 (
 	[relation_id] INTEGER NOT NULL,
-	[version] INTEGER  NOT NULL,
+	[relation_version] INTEGER  NOT NULL,
 	[member_type]INTEGER NOT NULL,
 	[member_id] INTEGER  NOT NULL,
 	[member_role] varchar(100) NULL,
@@ -85,7 +85,7 @@ CREATE INDEX IF NOT EXISTS [idx_node_tile] ON [node] ([tile] ASC);
 CREATE INDEX IF NOT EXISTS [idx_way_nodes_node] ON [way_nodes] ([node_id] ASC);
 CREATE INDEX IF NOT EXISTS [idx_way_nodes_way_sequence] ON [way_nodes] ([way_id] ASC,[sequence_id] ASC);
 
-CREATE TABLE IF NOT EXISTS [changesets] 
+CREATE TABLE IF NOT EXISTS [changeset] 
 (
 	[id] INTEGER NOT NULL,
 	[usr_id] INTEGER NULL, 
@@ -96,4 +96,20 @@ CREATE TABLE IF NOT EXISTS [changesets]
 	[max_lon] INTEGER NULL,
 	[closed_at] INTEGER NULL,
 	CONSTRAINT [pk_changesets] PRIMARY KEY ([id])
+);
+
+CREATE TABLE IF NOT EXISTS [changeset_tags]
+(
+	[changeset_id] INTEGER NOT NULL,
+	[key] varchar(100) NOT NULL,
+	[value] varchar(500) NULL
+);
+
+CREATE TABLE IF NOT EXISTS [changeset_changes]
+(
+	[changeset_id] INTEGER NOT NULL,
+	[type] INTEGER NOT NULL,
+	[osm_id] INTEGER NOT NULL,
+	[osm_type] INTEGER NOT NULL,
+	[osm_version] INTEGER NULL NULL
 );

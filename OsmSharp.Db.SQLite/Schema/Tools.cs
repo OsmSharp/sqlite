@@ -118,6 +118,15 @@ namespace OsmSharp.Db.SQLite.Schema
         }
 
         /// <summary>
+        /// Deletes all data in the history schema.
+        /// </summary>
+        public static void HistoryDbDeleteAll(SQLiteConnection connection)
+        {
+            _logger.Log(TraceEventType.Information, "Deleting all data in this database schema...");
+            ExecuteSQL(connection, "HistoryDbSchemaDELETE.sql");
+        }
+
+        /// <summary>
         /// Drops the history schema.
         /// </summary>
         public static void HistoryDbDropSchema(SQLiteConnection connection)

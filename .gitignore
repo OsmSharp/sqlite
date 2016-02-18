@@ -24,6 +24,7 @@ Core/OsmSharp.UnitTests/test-results*/
 Output*/
 OutputAndroid*/
 OutputWindowsPhone*/
+TestResults*/
 *.psess
 test-results*/
 *.vsp

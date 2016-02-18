@@ -94,9 +94,9 @@ namespace OsmSharp.Db.SQLite.Streams
 
             _insertNodeTagsCmd = _connection.CreateCommand();
             _insertNodeTagsCmd.Transaction = _transaction;
-            _insertNodeTagsCmd.CommandText = @"INSERT OR REPLACE INTO node_tags (node_id,version,key,value) VALUES (:node_id,:version,:key,:value);";
+            _insertNodeTagsCmd.CommandText = @"INSERT OR REPLACE INTO node_tags (node_id,node_version,key,value) VALUES (:node_id,:node_version,:key,:value);";
             _insertNodeTagsCmd.Parameters.Add(new SQLiteParameter(@"node_id", DbType.Int64));
-            _insertNodeTagsCmd.Parameters.Add(new SQLiteParameter(@"version", DbType.Int32));
+            _insertNodeTagsCmd.Parameters.Add(new SQLiteParameter(@"node_version", DbType.Int32));
             _insertNodeTagsCmd.Parameters.Add(new SQLiteParameter(@"key", DbType.String));
             _insertNodeTagsCmd.Parameters.Add(new SQLiteParameter(@"value", DbType.String));
 
@@ -113,17 +113,17 @@ namespace OsmSharp.Db.SQLite.Streams
 
             _insertWayTagsCmd = _connection.CreateCommand();
             _insertWayTagsCmd.Transaction = _transaction;
-            _insertWayTagsCmd.CommandText = @"INSERT OR REPLACE INTO way_tags (way_id,version,key,value) VALUES (:way_id,:version,:key,:value);";
+            _insertWayTagsCmd.CommandText = @"INSERT OR REPLACE INTO way_tags (way_id,way_version,key,value) VALUES (:way_id,:way_version,:key,:value);";
             _insertWayTagsCmd.Parameters.Add(new SQLiteParameter(@"way_id", DbType.Int64));
-            _insertWayTagsCmd.Parameters.Add(new SQLiteParameter(@"version", DbType.Int32));
+            _insertWayTagsCmd.Parameters.Add(new SQLiteParameter(@"way_version", DbType.Int32));
             _insertWayTagsCmd.Parameters.Add(new SQLiteParameter(@"key", DbType.String));
             _insertWayTagsCmd.Parameters.Add(new SQLiteParameter(@"value", DbType.String));
 
             _insertWayNodesCmd = _connection.CreateCommand();
             _insertWayNodesCmd.Transaction = _transaction;
-            _insertWayNodesCmd.CommandText = @"INSERT OR REPLACE INTO way_nodes (way_id,version,node_id,sequence_id) VALUES (:way_id,:version,:node_id,:sequence_id);";
+            _insertWayNodesCmd.CommandText = @"INSERT OR REPLACE INTO way_nodes (way_id,way_version,node_id,sequence_id) VALUES (:way_id,:way_version,:node_id,:sequence_id);";
             _insertWayNodesCmd.Parameters.Add(new SQLiteParameter(@"way_id", DbType.Int64));
-            _insertWayNodesCmd.Parameters.Add(new SQLiteParameter(@"version", DbType.Int32));
+            _insertWayNodesCmd.Parameters.Add(new SQLiteParameter(@"way_version", DbType.Int32));
             _insertWayNodesCmd.Parameters.Add(new SQLiteParameter(@"node_id", DbType.Int64));
             _insertWayNodesCmd.Parameters.Add(new SQLiteParameter(@"sequence_id", DbType.Int64));
 
@@ -140,17 +140,17 @@ namespace OsmSharp.Db.SQLite.Streams
 
             _insertRelationTagsCmd = _connection.CreateCommand();
             _insertRelationTagsCmd.Transaction = _transaction;
-            _insertRelationTagsCmd.CommandText = @"INSERT OR REPLACE INTO relation_tags (relation_id,version,key,value) VALUES (:relation_id,:version,:key,:value);";
+            _insertRelationTagsCmd.CommandText = @"INSERT OR REPLACE INTO relation_tags (relation_id,relation_version,key,value) VALUES (:relation_id,:relation_version,:key,:value);";
             _insertRelationTagsCmd.Parameters.Add(new SQLiteParameter(@"relation_id", DbType.Int64));
-            _insertRelationTagsCmd.Parameters.Add(new SQLiteParameter(@"version", DbType.Int32));
+            _insertRelationTagsCmd.Parameters.Add(new SQLiteParameter(@"relation_version", DbType.Int32));
             _insertRelationTagsCmd.Parameters.Add(new SQLiteParameter(@"key", DbType.String));
             _insertRelationTagsCmd.Parameters.Add(new SQLiteParameter(@"value", DbType.String));
 
             _insertRelationMembersCmd = _connection.CreateCommand();
             _insertRelationMembersCmd.Transaction = _transaction;
-            _insertRelationMembersCmd.CommandText = @"INSERT OR REPLACE INTO relation_members (relation_id,version,member_type,member_id,member_role,sequence_id) VALUES (:relation_id,:version,:member_type,:member_id,:member_role,:sequence_id);";
+            _insertRelationMembersCmd.CommandText = @"INSERT OR REPLACE INTO relation_members (relation_id,relation_version,member_type,member_id,member_role,sequence_id) VALUES (:relation_id,:relation_version,:member_type,:member_id,:member_role,:sequence_id);";
             _insertRelationMembersCmd.Parameters.Add(new SQLiteParameter(@"relation_id", DbType.Int64));
-            _insertRelationMembersCmd.Parameters.Add(new SQLiteParameter(@"version", DbType.Int32));
+            _insertRelationMembersCmd.Parameters.Add(new SQLiteParameter(@"relation_version", DbType.Int32));
             _insertRelationMembersCmd.Parameters.Add(new SQLiteParameter(@"member_type", DbType.Int32));
             _insertRelationMembersCmd.Parameters.Add(new SQLiteParameter(@"member_id", DbType.Int64));
             _insertRelationMembersCmd.Parameters.Add(new SQLiteParameter(@"member_role", DbType.String));
