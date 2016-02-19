@@ -20,7 +20,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-using OsmSharp.Db.SQLite.Logging;
+using OsmSharp.Logging;
 using System.Data.SQLite;
 using System.IO;
 using System.Reflection;

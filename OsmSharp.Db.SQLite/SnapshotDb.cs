@@ -32,7 +32,7 @@ using OsmSharp.Db.SQLite.Tiles;
 namespace OsmSharp.Db.SQLite
 {
     /// <summary>
-    /// Implements a snapshot db storing a snapshot of OSM-data in an SQL-server database.
+    /// Implements a snapshot db storing a snapshot of OSM-data in an SQLite database.
     /// </summary>
     public class SnapshotDb : ISnapshotDb, IDisposable
     {

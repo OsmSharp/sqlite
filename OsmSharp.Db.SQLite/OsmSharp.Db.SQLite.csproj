@@ -104,8 +104,6 @@
     <Compile Include="DbDataReaderWrapper.cs" />
     <Compile Include="Extensions.cs" />
     <Compile Include="HistoryDb.cs" />
-    <Compile Include="Logging\Logger.cs" />
-    <Compile Include="Logging\TraceEventType.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Schema\Tools.cs" />
     <Compile Include="SqlExtensions.cs" />
@@ -123,8 +121,8 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="OsmSharp, Version=2.0.2.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\OsmSharp.Core.2.0.2-alpha\lib\net40\OsmSharp.dll</HintPath>
+    <Reference Include="OsmSharp, Version=2.0.3.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\OsmSharp.Core.2.0.3-alpha\lib\net40\OsmSharp.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="protobuf-net">
