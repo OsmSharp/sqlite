@@ -38,6 +38,21 @@ namespace OsmSharp.Db.SQLite.Test.Functional
                 Console.WriteLine("{0}:{1} - {2}", origin, level, message);
             };
 
+            HistoryDbStreamTarget target = null;
+            if (args.Length > 1)
+            {
+                target = new HistoryDbStreamTarget(args[0]);
+                using (var stream = File.OpenRead(args[1]))
+                {
+                    var source = new OsmSharp.Streams.PBFOsmStreamSource(stream);
+                    var progress = new OsmSharp.Streams.Filters.OsmStreamFilterProgress();
+                    progress.RegisterSource(source);
+                    target.RegisterSource(progress);
+                    target.Pull();
+                }
+                return;
+            }
+
             // download all data.
             Staging.Download.DownloadAll();
 
@@ -55,8 +70,7 @@ namespace OsmSharp.Db.SQLite.Test.Functional
                 Console.WriteLine(osmGeo.ToInvariantString());
             }
 
-            var target = new HistoryDbStreamTarget(
-                    Settings.Default.ConnectionString);
+            target = new HistoryDbStreamTarget(Settings.Default.ConnectionString);
             using (var stream = File.OpenRead(@"belgium-latest.osm.pbf"))
             {
                 var source = new OsmSharp.Streams.PBFOsmStreamSource(stream);
