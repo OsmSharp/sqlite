@@ -125,7 +125,7 @@ namespace OsmSharp.Db.SQLite
 
             // read all nodes in bounding box.               
             var command = this.GetCommand(string.Format(
-                "select * from node left outer join node_tags on node.id = node_tags.node_id where (tile in ({0})) AND (visible=1) AND (latitude >= :minlat AND latitude < :maxlat AND longitude >= :minlon AND longitude < :maxlon) order by id",
+                "select * from node where (tile in ({0})) AND (visible=1) AND (latitude >= :minlat AND latitude < :maxlat AND longitude >= :minlon AND longitude < :maxlon) order by id",
                     boxes.BuildCommaSeperated()));
             command.Parameters.AddWithValue("minlat", (long)(minLatitude * 10000000));
             command.Parameters.AddWithValue("maxlat", (long)(maxLatitude * 10000000));
@@ -134,13 +134,24 @@ namespace OsmSharp.Db.SQLite
             var reader = command.ExecuteReaderWrapper();
             var nodeIds = new List<long>();
             var nodes = new List<Node>();
+            while (reader.Read())
+            {
+                var node = reader.BuildNode();
+                nodeIds.Add(node.Id.Value);
+                nodes.Add(node);
+            }
+
+            // get node tags.
+            command = this.GetCommand(string.Format(
+                "select * from node_tags where node_id in ({0}) order by node_id", nodeIds.BuildCommaSeperated()));
+            reader = command.ExecuteReaderWrapper();
             if (reader.Read())
             {
-                while (reader.HasActiveRow)
+                var nodeEnumerator = nodes.GetEnumerator();
+                while (reader.HasActiveRow &&
+                    nodeEnumerator.MoveNext())
                 {
-                    var node = reader.BuildNode();
-                    nodeIds.Add(node.Id.Value);
-                    nodes.Add(node);
+                    reader.AddTags(nodeEnumerator.Current);
                 }
             }
 
@@ -189,7 +200,7 @@ namespace OsmSharp.Db.SQLite
 
             // get relations.
             command = this.GetCommand(string.Format(
-                "select * from relation left outer join relation_members on relation.id = relation_members.relation_id where id in (select distinct relation_id from relation_members where (member_id in ({0}) and member_type = 0) or (member_id in ({1}) or member_type = 1)) order by id, sequence_id",
+                "select * from relation left outer join relation_members on relation.id = relation_members.relation_id where id in (select distinct relation_id from relation_members where (member_id in ({0}) and member_type = 0) or (member_id in ({1}) and member_type = 1)) order by id, sequence_id",
                     nodeIds.BuildCommaSeperated(), wayIds.BuildCommaSeperated()));
             reader = command.ExecuteReaderWrapper();
             var relations = new List<Relation>();
@@ -218,8 +229,32 @@ namespace OsmSharp.Db.SQLite
                 }
             }
 
-            // get extra nodes.
-            var extraNodes = this.Get(OsmGeoType.Node, extraNodeIds);
+            // get extra nodes.            
+            command = this.GetCommand(string.Format(
+                "select * from node where id in ({0}) order by id",
+                    extraNodeIds.BuildCommaSeperated()));
+            reader = command.ExecuteReaderWrapper();
+            var extraNodes = new List<Node>();
+            while (reader.Read())
+            {
+                var node = reader.BuildNode();
+                extraNodes.Add(node);
+            }
+
+            // get extra node tags.
+            command = this.GetCommand(string.Format(
+                "select * from node_tags where node_id in ({0}) order by node_id", extraNodeIds.BuildCommaSeperated()));
+            reader = command.ExecuteReaderWrapper();
+            if (reader.Read())
+            {
+                var nodeEnumerator = extraNodes.GetEnumerator();
+                while (reader.HasActiveRow &&
+                    nodeEnumerator.MoveNext())
+                {
+                    reader.AddTags(nodeEnumerator.Current);
+                }
+            }
+            
             foreach (var node in extraNodes)
             {
                 if (node != null)

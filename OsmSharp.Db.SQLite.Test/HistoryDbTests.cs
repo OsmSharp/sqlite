@@ -627,7 +627,7 @@ namespace OsmSharp.Db.SQLite.Test
             Assert.IsInstanceOf<Node>(result[0]);
             node = result[0] as Node;
             Assert.AreEqual(1, node.Id);
-            Assert.IsNull(node.Tags);
+            Assert.IsTrue(node.Tags == null || node.Tags.Count == 0);
             Assert.IsInstanceOf<Node>(result[1]);
             node = result[1] as Node;
             Assert.AreEqual(2, node.Id);
