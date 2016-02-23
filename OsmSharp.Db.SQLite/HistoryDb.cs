@@ -28,6 +28,7 @@ using System.Data.SQLite;
 using System.Data;
 using System.Linq;
 using OsmSharp.Db.SQLite.Tiles;
+using OsmSharp.Logging;
 
 namespace OsmSharp.Db.SQLite
 {
@@ -38,6 +39,7 @@ namespace OsmSharp.Db.SQLite
     {
         private readonly string _connectionString; // Holds the connection string.
         private readonly bool _createAndDetectSchema; // Flag that indicates if the schema needs to be created if not present.
+        private static Logger _logger = new Logger("historydb");
 
         /// <summary>
         /// Creates a history db.
@@ -1075,6 +1077,12 @@ namespace OsmSharp.Db.SQLite
             {
                 foreach (var modify in changeset.Modify)
                 {
+                    if (!this.Hide(modify))
+                    {
+                        _logger.Log(TraceEventType.Warning, "Failed to hide modification: {0}", modify.ToInvariantString());
+                        continue;
+                    }
+
                     var oldId = modify.Id;
                     modify.Version = modify.Version + 1;
                     switch (modify.Type)
@@ -1120,35 +1128,38 @@ namespace OsmSharp.Db.SQLite
             {
                 foreach (var delete in changeset.Delete)
                 {
-                    if (this.Hide(delete))
+                    if (!this.Hide(delete))
                     {
-                        switch (delete.Type)
-                        {
-                            case OsmGeoType.Node:
-                                diffResults.Add(new NodeResult()
-                                {
-                                    NewId = null,
-                                    OldId = delete.Id.Value,
-                                    NewVersion = null
-                                });
-                                break;
-                            case OsmGeoType.Way:
-                                diffResults.Add(new WayResult()
-                                {
-                                    NewId = null,
-                                    OldId = delete.Id.Value,
-                                    NewVersion = null
-                                });
-                                break;
-                            case OsmGeoType.Relation:
-                                diffResults.Add(new RelationResult()
-                                {
-                                    NewId = null,
-                                    OldId = delete.Id.Value,
-                                    NewVersion = null
-                                });
-                                break;
-                        }
+                        _logger.Log(TraceEventType.Warning, "Failed to hide deletion: {0}", delete.ToInvariantString());
+                        continue;
+                    }
+
+                    switch (delete.Type)
+                    {
+                        case OsmGeoType.Node:
+                            diffResults.Add(new NodeResult()
+                            {
+                                NewId = null,
+                                OldId = delete.Id.Value,
+                                NewVersion = null
+                            });
+                            break;
+                        case OsmGeoType.Way:
+                            diffResults.Add(new WayResult()
+                            {
+                                NewId = null,
+                                OldId = delete.Id.Value,
+                                NewVersion = null
+                            });
+                            break;
+                        case OsmGeoType.Relation:
+                            diffResults.Add(new RelationResult()
+                            {
+                                NewId = null,
+                                OldId = delete.Id.Value,
+                                NewVersion = null
+                            });
+                            break;
                     }
                 }
             }

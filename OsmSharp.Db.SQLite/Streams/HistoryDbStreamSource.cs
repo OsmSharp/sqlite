@@ -245,6 +245,7 @@ namespace OsmSharp.Db.SQLite.Streams
         /// </summary>
         public override void Reset()
         {
+            _currentType = null;
             if (_nodeReader != null) { (_nodeReader as IDisposable).Dispose(); }
             if (_nodeTagsReader != null) { (_nodeTagsReader as IDisposable).Dispose(); }
             if (_wayReader != null) { (_wayReader as IDisposable).Dispose(); }

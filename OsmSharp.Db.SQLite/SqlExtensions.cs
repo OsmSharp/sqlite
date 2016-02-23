@@ -148,6 +148,10 @@ namespace OsmSharp.Db.SQLite
         /// </summary>
         public static void AddTags(this DbDataReaderWrapper reader, OsmGeo osmGeo, string idColumn, string versionColumn)
         {
+            if (!reader.HasActiveRow)
+            {
+                return;
+            }
             if (reader.IsDBNull(idColumn))
             { // no tags.
                 reader.Read();
