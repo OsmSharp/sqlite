@@ -16,6 +16,7 @@
     <tags>osm, openstreetmap, sqlite</tags>
     <dependencies>
 		  <dependency id="OsmSharp.Core" version="[2,3)" />
+		  <dependency id="System.Data.SQLite.Core" version="[1.0.99, 2)" />
     </dependencies>
   </metadata>
   <files>
