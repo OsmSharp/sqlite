@@ -128,9 +128,9 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="OsmSharp, Version=2.0.3.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\osmsharp\core\Output\OsmSharp.dll</HintPath>
+    <Reference Include="OsmSharp, Version=2.0.6.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\OsmSharp.Core.2.0.6-alpha\lib\net40\OsmSharp.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="protobuf-net">
       <HintPath>..\..\core\Output\protobuf-net.dll</HintPath>

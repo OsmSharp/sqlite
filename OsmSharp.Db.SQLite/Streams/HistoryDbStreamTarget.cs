@@ -97,7 +97,7 @@ namespace OsmSharp.Db.SQLite.Streams
             _insertNodeTagsCmd.Parameters.Add(new SQLiteParameter(@"value", DbType.String));
 
             _insertWayCmd = _connection.CreateCommand();
-            _insertWayCmd.Transaction = _connection.BeginTransaction();
+            _insertWayCmd.Transaction = _insertNodeCmd.Transaction; //_connection.BeginTransaction();
             _insertWayCmd.CommandText = @"INSERT OR REPLACE INTO way (id,changeset_id,visible,timestamp,version,usr,usr_id) VALUES (:id,:changeset_id,:visible,:timestamp,:version,:usr,:usr_id);";
             _insertWayCmd.Parameters.Add(new SQLiteParameter(@"id", DbType.Int64));
             _insertWayCmd.Parameters.Add(new SQLiteParameter(@"changeset_id", DbType.Int64));
@@ -122,7 +122,7 @@ namespace OsmSharp.Db.SQLite.Streams
             _insertWayNodesCmd.Parameters.Add(new SQLiteParameter(@"sequence_id", DbType.Int64));
 
             _insertRelationCmd = _connection.CreateCommand();
-            _insertRelationCmd.Transaction = _connection.BeginTransaction();
+            _insertRelationCmd.Transaction = _insertNodeCmd.Transaction; //_connection.BeginTransaction();
             _insertRelationCmd.CommandText = @"INSERT OR REPLACE INTO relation (id,changeset_id,visible,timestamp,version,usr,usr_id) VALUES (:id,:changeset_id,:visible,:timestamp,:version,:usr,:usr_id);";
             _insertRelationCmd.Parameters.Add(new SQLiteParameter(@"id", DbType.Int64));
             _insertRelationCmd.Parameters.Add(new SQLiteParameter(@"changeset_id", DbType.Int64));
@@ -314,10 +314,25 @@ namespace OsmSharp.Db.SQLite.Streams
         }
 
         /// <summary>
+        /// Flushes the data in this target.
+        /// </summary>
+        public override void Flush()
+        {
+            if (_insertNodeCmd != null &&
+                _insertNodeCmd.Transaction != null)
+            {
+                _insertNodeCmd.Transaction.Commit();
+                _insertNodeCmd.Transaction = _connection.BeginTransaction();
+            }
+        }
+
+        /// <summary>
         /// Closes this target.
         /// </summary>
 		public override void Close()
         {
+            this.Flush();
+
             if (_connection != null)
             {
                 if (!string.IsNullOrWhiteSpace(_connectionString))

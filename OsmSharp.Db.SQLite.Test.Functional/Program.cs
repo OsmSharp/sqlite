@@ -22,6 +22,7 @@
 
 using OsmSharp.Db.SQLite.Streams;
 using OsmSharp.Db.SQLite.Test.Functional.Properties;
+using OsmSharp.Streams.Filters;
 using System;
 using System.Data.SQLite;
 using System.IO;
@@ -38,49 +39,42 @@ namespace OsmSharp.Db.SQLite.Test.Functional
                 Console.WriteLine("{0}:{1} - {2}", origin, level, message);
             };
 
-            //HistoryDbStreamTarget target = null;
-            //if (args.Length > 1)
-            //{
-            //    target = new HistoryDbStreamTarget(args[0]);
-            //    using (var stream = File.OpenRead(args[1]))
-            //    {
-            //        var source = new OsmSharp.Streams.PBFOsmStreamSource(stream);
-            //        var progress = new OsmSharp.Streams.Filters.OsmStreamFilterProgress();
-            //        progress.RegisterSource(source);
-            //        target.RegisterSource(progress);
-            //        target.Pull();
-            //    }
-            //    return;
-            //}
-
-            //// download all data.
-            //Staging.Download.DownloadAll();
-
-            //using (var connection = new SQLiteConnection(
-            //    Settings.Default.ConnectionString))
-            //{
-            //    connection.Open();
-            //    Schema.Tools.HistoryDbDropSchema(connection);
-            //}
-
-            var dbSource = new HistoryDbStreamSource(
-                string.Format("Data Source={0};Version=3;New=true", @"D:\work\data\OSM\sqlite\belgium.highways.historydb"));
-            var progress = new OsmSharp.Streams.Filters.OsmStreamFilterProgress();
-            progress.RegisterSource(dbSource);
-            foreach(var osmGeo in progress)
+            HistoryDbStreamTarget target = null;
+            OsmStreamFilter progress = null;
+            if (args.Length > 1)
             {
-
+                target = new HistoryDbStreamTarget(args[0]);
+                using (var stream = File.OpenRead(args[1]))
+                {
+                    var source = new OsmSharp.Streams.PBFOsmStreamSource(stream);
+                    progress = new OsmSharp.Streams.Filters.OsmStreamFilterProgress();
+                    progress.RegisterSource(source);
+                    target.RegisterSource(progress);
+                    target.Pull();
+                }
+                return;
             }
 
-            //target = new HistoryDbStreamTarget(Settings.Default.ConnectionString);
-            //using (var stream = File.OpenRead(@"belgium-latest.osm.pbf"))
-            //{
-            //    var source = new OsmSharp.Streams.PBFOsmStreamSource(stream);
-            //    var progress = new OsmSharp.Streams.Filters.OsmStreamFilterProgress();
-            //    progress.RegisterSource(source);
-            //    target.RegisterSource(progress);
-            //    target.Pull();
-            //}
+            // download all data.
+            Staging.Download.DownloadAll();
+
+            using (var connection = new SQLiteConnection(
+                Settings.Default.ConnectionString))
+            {
+                connection.Open();
+                Schema.Tools.HistoryDbDropSchema(connection);
+            }
+
+
+            target = new HistoryDbStreamTarget(Settings.Default.ConnectionString);
+            using (var stream = File.OpenRead(@"belgium-latest.osm.pbf"))
+            {
+                var source = new OsmSharp.Streams.PBFOsmStreamSource(stream);
+                progress = new OsmSharp.Streams.Filters.OsmStreamFilterProgress();
+                progress.RegisterSource(source);
+                target.RegisterSource(progress);
+                target.Pull();
+            }
         }
     }
 }
