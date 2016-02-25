@@ -94,10 +94,12 @@ namespace OsmSharp.Db.SQLite.Streams
             }
         }
 
+        private bool _initialized = false;
+
         /// <summary>
         /// Initializes this source.
         /// </summary>
-        public override void Initialize()
+        private void Initialize()
         {
             var command = this.GetCommand("select * from node order by id");
             _nodeReader = new DbDataReaderWrapper(command.ExecuteReader());
@@ -157,6 +159,12 @@ namespace OsmSharp.Db.SQLite.Streams
         /// </summary>
         public override bool MoveNext(bool ignoreNodes, bool ignoreWays, bool ignoreRelations)
         {
+            if (!_initialized)
+            {
+                this.Initialize();
+                _initialized = true;
+            }
+
             if (_currentType == null)
             { // first move.
                 _currentType = OsmGeoType.Node;

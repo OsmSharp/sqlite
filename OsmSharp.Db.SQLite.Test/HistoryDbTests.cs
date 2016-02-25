@@ -25,6 +25,7 @@ using OsmSharp.Changesets;
 using OsmSharp.Tags;
 using System.Collections.Generic;
 using System.Data.SQLite;
+using OsmSharp.Db.SQLite.Schema;
 
 namespace OsmSharp.Db.SQLite.Test
 {
@@ -41,6 +42,9 @@ namespace OsmSharp.Db.SQLite.Test
         public void TestAddNode()
         {
             var connection = new SQLiteConnection("Data Source=:memory:;Version=3;New=True;");
+            connection.Open();
+            connection.HistoryDbCreateAndDetect();
+
             var db = new HistoryDb(connection);
             db.Add(new Node()
             {
@@ -67,7 +71,7 @@ namespace OsmSharp.Db.SQLite.Test
             });
 
             var command = new SQLiteCommand("select * from node where id = :id", connection);
-            command.Parameters.Add("id", 1);
+            command.Parameters.AddWithValue("id", 1);
             var reader = command.ExecuteReaderWrapper();
             Assert.IsTrue(reader.Read());
             Assert.AreEqual(1, reader.GetInt64("id"));
@@ -81,20 +85,18 @@ namespace OsmSharp.Db.SQLite.Test
             Assert.AreEqual(true, reader.GetBoolean("visible"));
 
             command = new SQLiteCommand("select * from node_tags where node_id = :id", connection);
-            command.Parameters.Add("id", 1);
+            command.Parameters.AddWithValue("id", 1);
             reader = command.ExecuteReaderWrapper();
             Assert.IsTrue(reader.Read());
             var key = reader.GetString("key");
             var value = reader.GetString("value");
             Assert.IsTrue((key == "key0" && value == "value0") ||
                 key == "key1" && value == "value1");
-            Assert.AreEqual(1, reader.GetInt32("node_version"));
             Assert.IsTrue(reader.Read());
             key = reader.GetString("key");
             value = reader.GetString("value");
             Assert.IsTrue((key == "key0" && value == "value0") ||
                 key == "key1" && value == "value1");
-            Assert.AreEqual(1, reader.GetInt32("node_version"));
         }
 
         /// <summary>
@@ -104,6 +106,9 @@ namespace OsmSharp.Db.SQLite.Test
         public void TestAddWay()
         {
             var connection = new SQLiteConnection("Data Source=:memory:;Version=3;New=True;");
+            connection.Open();
+            connection.HistoryDbCreateAndDetect();
+
             var db = new HistoryDb(connection);
             db.Add(new Way()
             {
@@ -134,7 +139,7 @@ namespace OsmSharp.Db.SQLite.Test
             });
 
             var command = new SQLiteCommand("select * from way where id = :id", connection);
-            command.Parameters.Add("id", 1);
+            command.Parameters.AddWithValue("id", 1);
             var reader = command.ExecuteReaderWrapper();
             Assert.IsTrue(reader.Read());
             Assert.AreEqual(1, reader.GetInt64("id"));
@@ -146,7 +151,7 @@ namespace OsmSharp.Db.SQLite.Test
             Assert.AreEqual(true, reader.GetBoolean("visible"));
 
             command = new SQLiteCommand("select * from way_tags where way_id = :id", connection);
-            command.Parameters.Add("id", 1);
+            command.Parameters.AddWithValue("id", 1);
             reader = command.ExecuteReaderWrapper();
             Assert.IsTrue(reader.Read());
             var key = reader.GetString("key");
@@ -160,7 +165,7 @@ namespace OsmSharp.Db.SQLite.Test
                 key == "key1" && value == "value1");
 
             command = new SQLiteCommand("select * from way_nodes where way_id = :id", connection);
-            command.Parameters.Add("id", 1);
+            command.Parameters.AddWithValue("id", 1);
             reader = command.ExecuteReaderWrapper();
             Assert.IsTrue(reader.Read());
             Assert.AreEqual(0, reader.GetInt32("sequence_id"));
@@ -180,6 +185,9 @@ namespace OsmSharp.Db.SQLite.Test
         public void TestAddRelation()
         {
             var connection = new SQLiteConnection("Data Source=:memory:;Version=3;New=True;");
+            connection.Open();
+            connection.HistoryDbCreateAndDetect();
+
             var db = new HistoryDb(connection);
             db.Add(new Relation()
             {
@@ -225,7 +233,7 @@ namespace OsmSharp.Db.SQLite.Test
             });
 
             var command = new SQLiteCommand("select * from relation where id = :id", connection);
-            command.Parameters.Add("id", 1);
+            command.Parameters.AddWithValue("id", 1);
             var reader = command.ExecuteReaderWrapper();
             Assert.IsTrue(reader.Read());
             Assert.AreEqual(1, reader.GetInt64("id"));
@@ -237,7 +245,7 @@ namespace OsmSharp.Db.SQLite.Test
             Assert.AreEqual(true, reader.GetBoolean("visible"));
 
             command = new SQLiteCommand("select * from relation_tags where relation_id = :id", connection);
-            command.Parameters.Add("id", 1);
+            command.Parameters.AddWithValue("id", 1);
             reader = command.ExecuteReaderWrapper();
             Assert.IsTrue(reader.Read());
             var key = reader.GetString("key");
@@ -251,7 +259,7 @@ namespace OsmSharp.Db.SQLite.Test
                 key == "key1" && value == "value1");
 
             command = new SQLiteCommand("select * from relation_members where relation_id = :id", connection);
-            command.Parameters.Add("id", 1);
+            command.Parameters.AddWithValue("id", 1);
             reader = command.ExecuteReaderWrapper();
             Assert.IsTrue(reader.Read());
             Assert.AreEqual(0, reader.GetInt32("sequence_id"));
@@ -277,6 +285,9 @@ namespace OsmSharp.Db.SQLite.Test
         public void TestGetNode()
         {
             var connection = new SQLiteConnection("Data Source=:memory:;Version=3;New=True;");
+            connection.Open();
+            connection.HistoryDbCreateAndDetect();
+
             var db = new HistoryDb(connection);
             db.Add(new Node()
             {
@@ -324,6 +335,9 @@ namespace OsmSharp.Db.SQLite.Test
         public void TestGetWay()
         {
             var connection = new SQLiteConnection("Data Source=:memory:;Version=3;New=True;");
+            connection.Open();
+            connection.HistoryDbCreateAndDetect();
+
             var db = new HistoryDb(connection);
             db.Add(new Way()
             {
@@ -379,6 +393,9 @@ namespace OsmSharp.Db.SQLite.Test
         public void TestGetRelation()
         {
             var connection = new SQLiteConnection("Data Source=:memory:;Version=3;New=True;");
+            connection.Open();
+            connection.HistoryDbCreateAndDetect();
+
             var db = new HistoryDb(connection);
             db.Add(new Relation()
             {
@@ -455,6 +472,9 @@ namespace OsmSharp.Db.SQLite.Test
         public void TestClear()
         {
             var connection = new SQLiteConnection("Data Source=:memory:;Version=3;New=True;");
+            connection.Open();
+            connection.HistoryDbCreateAndDetect();
+
             var db = new HistoryDb(connection);
             db.Add(new Node()
             {
@@ -566,6 +586,9 @@ namespace OsmSharp.Db.SQLite.Test
         public void TestGetNodesInBox()
         {
             var connection = new SQLiteConnection("Data Source=:memory:;Version=3;New=True;");
+            connection.Open();
+            connection.HistoryDbCreateAndDetect();
+
             var db = new HistoryDb(connection);
             db.Add(new OsmGeo[]
                 {
@@ -591,6 +614,9 @@ namespace OsmSharp.Db.SQLite.Test
             Assert.IsNull(node.Tags);
 
             connection = new SQLiteConnection("Data Source=:memory:;Version=3;New=True;");
+            connection.Open();
+            connection.HistoryDbCreateAndDetect();
+
             db = new HistoryDb(connection);
             db.Add(new OsmGeo[]
                 {
@@ -642,6 +668,9 @@ namespace OsmSharp.Db.SQLite.Test
         public void TestGetWaysInBox()
         {
             var connection = new SQLiteConnection("Data Source=:memory:;Version=3;New=True;");
+            connection.Open();
+            connection.HistoryDbCreateAndDetect();
+
             var db = new HistoryDb(connection);
             db.Add(new OsmGeo[]
                 {
@@ -777,7 +806,7 @@ namespace OsmSharp.Db.SQLite.Test
             node = result[3] as Node;
             Assert.AreEqual(4, node.Id);
             Assert.IsNull(node.Tags);
-            
+
             way = result[4] as Way;
             Assert.AreEqual(1, way.Id);
             Assert.IsNotNull(way.Tags);
@@ -802,6 +831,9 @@ namespace OsmSharp.Db.SQLite.Test
         public void TestGetRelationsInBox()
         {
             var connection = new SQLiteConnection("Data Source=:memory:;Version=3;New=True;");
+            connection.Open();
+            connection.HistoryDbCreateAndDetect();
+
             var db = new HistoryDb(connection);
             db.Add(new OsmGeo[]
                 {
@@ -974,6 +1006,9 @@ namespace OsmSharp.Db.SQLite.Test
         public void TestApplyChangesetDeleteNode()
         {
             var connection = new SQLiteConnection("Data Source=:memory:;Version=3;New=True;");
+            connection.Open();
+            connection.HistoryDbCreateAndDetect();
+
             var db = new HistoryDb(connection);
 
             var node = new Node()
@@ -1039,6 +1074,9 @@ namespace OsmSharp.Db.SQLite.Test
         public void TestApplyChangesetModifyNode()
         {
             var connection = new SQLiteConnection("Data Source=:memory:;Version=3;New=True;");
+            connection.Open();
+            connection.HistoryDbCreateAndDetect();
+
             var db = new HistoryDb(connection);
 
             var node = new Node()
@@ -1104,6 +1142,9 @@ namespace OsmSharp.Db.SQLite.Test
         public void TestApplyChangesetCreateNode()
         {
             var connection = new SQLiteConnection("Data Source=:memory:;Version=3;New=True;");
+            connection.Open();
+            connection.HistoryDbCreateAndDetect();
+
             var db = new HistoryDb(connection);
 
             var node = new Node()

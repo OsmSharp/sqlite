@@ -102,12 +102,19 @@
     </Compile>
     <Compile Include="Constants.cs" />
     <Compile Include="DbDataReaderWrapper.cs" />
+    <Compile Include="Enumerators\MergedEnumerable.cs" />
+    <Compile Include="Enumerators\RelationEnumerable.cs" />
+    <Compile Include="Enumerators\WayEnumerable.cs" />
     <Compile Include="Extensions.cs" />
     <Compile Include="HistoryDb.cs" />
+    <Compile Include="Impl\HistoryDbImpl.cs" />
+    <Compile Include="Impl\SnapshotDbImpl.cs" />
+    <Compile Include="Enumerators\NodeEnumerable.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Schema\Tools.cs" />
-    <Compile Include="SqlExtensions.cs" />
+    <Compile Include="SQLiteExtensions.cs" />
     <Compile Include="SnapshotDb.cs" />
+    <Compile Include="SQLiteException.cs" />
     <Compile Include="Streams\HistoryDbStreamTarget.cs" />
     <Compile Include="Streams\HistoryDbStreamSource.cs" />
     <Compile Include="Streams\SnapshotDbStreamSource.cs" />
@@ -122,8 +129,8 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Include="OsmSharp, Version=2.0.3.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\OsmSharp.Core.2.0.3-alpha\lib\net40\OsmSharp.dll</HintPath>
-      <Private>True</Private>
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\osmsharp\core\Output\OsmSharp.dll</HintPath>
     </Reference>
     <Reference Include="protobuf-net">
       <HintPath>..\..\core\Output\protobuf-net.dll</HintPath>

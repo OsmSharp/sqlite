@@ -71,7 +71,7 @@ namespace OsmSharp.Db.SQLite.Test.Streams
             target.Pull();
 
             var command = new SQLiteCommand("select * from node where id = :id", connection);
-            command.Parameters.Add("id", 1);
+            command.Parameters.AddWithValue("id", 1);
             var reader = command.ExecuteReaderWrapper();
             Assert.IsTrue(reader.Read());
             Assert.AreEqual(1, reader.GetInt64("id"));
@@ -85,22 +85,18 @@ namespace OsmSharp.Db.SQLite.Test.Streams
             Assert.AreEqual(true, reader.GetBoolean("visible"));
 
             command = new SQLiteCommand("select * from node_tags where node_id = :id", connection);
-            command.Parameters.Add("id", 1);
+            command.Parameters.AddWithValue("id", 1);
             reader = command.ExecuteReaderWrapper();
             Assert.IsTrue(reader.Read());
             var key = reader.GetString("key");
             var value = reader.GetString("value");
-            var version = reader.GetInt64("node_version");
             Assert.IsTrue((key == "key0" && value == "value0") ||
                 key == "key1" && value == "value1");
-            Assert.AreEqual(1, version);
             Assert.IsTrue(reader.Read());
             key = reader.GetString("key");
             value = reader.GetString("value");
-            version = reader.GetInt64("node_version");
             Assert.IsTrue((key == "key0" && value == "value0") ||
                 key == "key1" && value == "value1");
-            Assert.AreEqual(1, version);
         }
 
         /// <summary>
@@ -145,7 +141,7 @@ namespace OsmSharp.Db.SQLite.Test.Streams
             target.Pull();
 
             var command = new SQLiteCommand("select * from way where id = :id", connection);
-            command.Parameters.Add("id", 1);
+            command.Parameters.AddWithValue("id", 1);
             var reader = command.ExecuteReaderWrapper();
             Assert.IsTrue(reader.Read());
             Assert.AreEqual(1, reader.GetInt64("id"));
@@ -157,37 +153,31 @@ namespace OsmSharp.Db.SQLite.Test.Streams
             Assert.AreEqual(true, reader.GetBoolean("visible"));
 
             command = new SQLiteCommand("select * from way_tags where way_id = :id", connection);
-            command.Parameters.Add("id", 1);
+            command.Parameters.AddWithValue("id", 1);
             reader = command.ExecuteReaderWrapper();
             Assert.IsTrue(reader.Read());
             var key = reader.GetString("key");
             var value = reader.GetString("value");
-            var version = reader.GetInt64("way_version");
             Assert.IsTrue((key == "key0" && value == "value0") ||
                 key == "key1" && value == "value1");
-            Assert.AreEqual(1, version);
             Assert.IsTrue(reader.Read());
             key = reader.GetString("key");
             value = reader.GetString("value");
             Assert.IsTrue((key == "key0" && value == "value0") ||
                 key == "key1" && value == "value1");
-            Assert.AreEqual(1, version);
 
             command = new SQLiteCommand("select * from way_nodes where way_id = :id", connection);
-            command.Parameters.Add("id", 1);
+            command.Parameters.AddWithValue("id", 1);
             reader = command.ExecuteReaderWrapper();
             Assert.IsTrue(reader.Read());
             Assert.AreEqual(0, reader.GetInt32("sequence_id"));
             Assert.AreEqual(12, reader.GetInt64("node_id"));
-            Assert.AreEqual(1, reader.GetInt32("way_version"));
             Assert.IsTrue(reader.Read());
             Assert.AreEqual(1, reader.GetInt32("sequence_id"));
             Assert.AreEqual(23, reader.GetInt64("node_id"));
-            Assert.AreEqual(1, reader.GetInt32("way_version"));
             Assert.IsTrue(reader.Read());
             Assert.AreEqual(2, reader.GetInt32("sequence_id"));
             Assert.AreEqual(34, reader.GetInt64("node_id"));
-            Assert.AreEqual(1, reader.GetInt32("way_version"));
         }
 
         /// <summary>
@@ -247,7 +237,7 @@ namespace OsmSharp.Db.SQLite.Test.Streams
             target.Pull();
 
             var command = new SQLiteCommand("select * from relation where id = :id", connection);
-            command.Parameters.Add("id", 1);
+            command.Parameters.AddWithValue("id", 1);
             var reader = command.ExecuteReaderWrapper();
             Assert.IsTrue(reader.Read());
             Assert.AreEqual(1, reader.GetInt64("id"));
@@ -259,42 +249,37 @@ namespace OsmSharp.Db.SQLite.Test.Streams
             Assert.AreEqual(true, reader.GetBoolean("visible"));
 
             command = new SQLiteCommand("select * from relation_tags where relation_id = :id", connection);
-            command.Parameters.Add("id", 1);
+            command.Parameters.AddWithValue("id", 1);
             reader = command.ExecuteReaderWrapper();
             Assert.IsTrue(reader.Read());
             var key = reader.GetString("key");
             var value = reader.GetString("value");
-            var version = reader.GetInt32("relation_version");
             Assert.IsTrue((key == "key0" && value == "value0") ||
                 key == "key1" && value == "value1");
             Assert.IsTrue(reader.Read());
             key = reader.GetString("key");
             value = reader.GetString("value");
-            version = reader.GetInt32("relation_version");
             Assert.IsTrue((key == "key0" && value == "value0") ||
                 key == "key1" && value == "value1");
 
             command = new SQLiteCommand("select * from relation_members where relation_id = :id", connection);
-            command.Parameters.Add("id", 1);
+            command.Parameters.AddWithValue("id", 1);
             reader = command.ExecuteReaderWrapper();
             Assert.IsTrue(reader.Read());
             Assert.AreEqual(0, reader.GetInt32("sequence_id"));
             Assert.AreEqual(12, reader.GetInt64("member_id"));
             Assert.AreEqual(0, reader.GetInt64("member_type"));
             Assert.AreEqual("first", reader.GetString("member_role"));
-            Assert.AreEqual(1, reader.GetInt32("relation_version"));
             Assert.IsTrue(reader.Read());
             Assert.AreEqual(1, reader.GetInt32("sequence_id"));
             Assert.AreEqual(23, reader.GetInt64("member_id"));
             Assert.AreEqual(1, reader.GetInt64("member_type"));
             Assert.AreEqual("second", reader.GetString("member_role"));
-            Assert.AreEqual(1, reader.GetInt32("relation_version"));
             Assert.IsTrue(reader.Read());
             Assert.AreEqual(2, reader.GetInt32("sequence_id"));
             Assert.AreEqual(34, reader.GetInt64("member_id"));
             Assert.AreEqual(2, reader.GetInt64("member_type"));
             Assert.AreEqual("third", reader.GetString("member_role"));
-            Assert.AreEqual(1, reader.GetInt32("relation_version"));
         }
     }
 }

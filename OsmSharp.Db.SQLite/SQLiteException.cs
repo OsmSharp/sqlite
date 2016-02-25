@@ -20,7 +20,22 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-using System.Reflection;
+using System;
 
-[assembly: AssemblyVersion("5.0.3")]
-[assembly: AssemblyInformationalVersion("5.0.3-alpha")]
+namespace OsmSharp.Db.SQLite
+{
+    /// <summary>
+    /// An exception related to SQLite.
+    /// </summary>
+    public class SQLiteException : Exception
+    {
+        /// <summary>
+        /// Creates a new SQLite exception.
+        /// </summary>
+        public SQLiteException(string message)
+            : base(message)
+        {
+
+        }
+    }
+}

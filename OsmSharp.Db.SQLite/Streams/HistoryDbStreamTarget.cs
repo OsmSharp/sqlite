@@ -28,7 +28,7 @@ using System.Data;
 namespace OsmSharp.Db.SQLite.Streams
 {
     /// <summary>
-    /// Data processor target for SQLite.
+    /// An osm stream to write data to a history db.
     /// </summary>
     public class HistoryDbStreamTarget : OsmStreamTarget
     {
@@ -42,7 +42,6 @@ namespace OsmSharp.Db.SQLite.Streams
         private SQLiteCommand _insertRelationCmd;
         private SQLiteCommand _insertRelationTagsCmd;
         private SQLiteCommand _insertRelationMembersCmd;
-        private SQLiteTransaction _transaction;
 
         /// <summary>
         /// Creates a new SQLite target.
@@ -76,10 +75,8 @@ namespace OsmSharp.Db.SQLite.Streams
 
             Schema.Tools.HistoryDbCreateAndDetect(_connection);
 
-            _transaction = _connection.BeginTransaction();
-
             _insertNodeCmd = _connection.CreateCommand();
-            _insertNodeCmd.Transaction = _transaction;
+            _insertNodeCmd.Transaction = _connection.BeginTransaction();
             _insertNodeCmd.CommandText = @"INSERT OR REPLACE INTO node (id,latitude,longitude,changeset_id,visible,timestamp,tile,version,usr,usr_id) VALUES (:id,:latitude,:longitude,:changeset_id,:visible,:timestamp,:tile,:version,:usr,:usr_id);";
             _insertNodeCmd.Parameters.Add(new SQLiteParameter(@"id", DbType.Int64));
             _insertNodeCmd.Parameters.Add(new SQLiteParameter(@"latitude", DbType.Int64));
@@ -93,15 +90,14 @@ namespace OsmSharp.Db.SQLite.Streams
             _insertNodeCmd.Parameters.Add(new SQLiteParameter(@"usr_id", DbType.Int64));
 
             _insertNodeTagsCmd = _connection.CreateCommand();
-            _insertNodeTagsCmd.Transaction = _transaction;
-            _insertNodeTagsCmd.CommandText = @"INSERT OR REPLACE INTO node_tags (node_id,node_version,key,value) VALUES (:node_id,:node_version,:key,:value);";
+            _insertNodeTagsCmd.Transaction = _insertNodeCmd.Transaction;
+            _insertNodeTagsCmd.CommandText = @"INSERT OR REPLACE INTO node_tags (node_id,key,value) VALUES (:node_id,:key,:value);";
             _insertNodeTagsCmd.Parameters.Add(new SQLiteParameter(@"node_id", DbType.Int64));
-            _insertNodeTagsCmd.Parameters.Add(new SQLiteParameter(@"node_version", DbType.Int32));
             _insertNodeTagsCmd.Parameters.Add(new SQLiteParameter(@"key", DbType.String));
             _insertNodeTagsCmd.Parameters.Add(new SQLiteParameter(@"value", DbType.String));
 
             _insertWayCmd = _connection.CreateCommand();
-            _insertWayCmd.Transaction = _transaction;
+            _insertWayCmd.Transaction = _connection.BeginTransaction();
             _insertWayCmd.CommandText = @"INSERT OR REPLACE INTO way (id,changeset_id,visible,timestamp,version,usr,usr_id) VALUES (:id,:changeset_id,:visible,:timestamp,:version,:usr,:usr_id);";
             _insertWayCmd.Parameters.Add(new SQLiteParameter(@"id", DbType.Int64));
             _insertWayCmd.Parameters.Add(new SQLiteParameter(@"changeset_id", DbType.Int64));
@@ -112,23 +108,21 @@ namespace OsmSharp.Db.SQLite.Streams
             _insertWayCmd.Parameters.Add(new SQLiteParameter(@"usr_id", DbType.Int64));
 
             _insertWayTagsCmd = _connection.CreateCommand();
-            _insertWayTagsCmd.Transaction = _transaction;
-            _insertWayTagsCmd.CommandText = @"INSERT OR REPLACE INTO way_tags (way_id,way_version,key,value) VALUES (:way_id,:way_version,:key,:value);";
+            _insertWayTagsCmd.Transaction = _insertWayCmd.Transaction;
+            _insertWayTagsCmd.CommandText = @"INSERT OR REPLACE INTO way_tags (way_id,key,value) VALUES (:way_id,:key,:value);";
             _insertWayTagsCmd.Parameters.Add(new SQLiteParameter(@"way_id", DbType.Int64));
-            _insertWayTagsCmd.Parameters.Add(new SQLiteParameter(@"way_version", DbType.Int32));
             _insertWayTagsCmd.Parameters.Add(new SQLiteParameter(@"key", DbType.String));
             _insertWayTagsCmd.Parameters.Add(new SQLiteParameter(@"value", DbType.String));
 
             _insertWayNodesCmd = _connection.CreateCommand();
-            _insertWayNodesCmd.Transaction = _transaction;
-            _insertWayNodesCmd.CommandText = @"INSERT OR REPLACE INTO way_nodes (way_id,way_version,node_id,sequence_id) VALUES (:way_id,:way_version,:node_id,:sequence_id);";
+            _insertWayNodesCmd.Transaction = _insertWayCmd.Transaction;
+            _insertWayNodesCmd.CommandText = @"INSERT OR REPLACE INTO way_nodes (way_id,node_id,sequence_id) VALUES (:way_id,:node_id,:sequence_id);";
             _insertWayNodesCmd.Parameters.Add(new SQLiteParameter(@"way_id", DbType.Int64));
-            _insertWayNodesCmd.Parameters.Add(new SQLiteParameter(@"way_version", DbType.Int32));
             _insertWayNodesCmd.Parameters.Add(new SQLiteParameter(@"node_id", DbType.Int64));
             _insertWayNodesCmd.Parameters.Add(new SQLiteParameter(@"sequence_id", DbType.Int64));
 
             _insertRelationCmd = _connection.CreateCommand();
-            _insertRelationCmd.Transaction = _transaction;
+            _insertRelationCmd.Transaction = _connection.BeginTransaction();
             _insertRelationCmd.CommandText = @"INSERT OR REPLACE INTO relation (id,changeset_id,visible,timestamp,version,usr,usr_id) VALUES (:id,:changeset_id,:visible,:timestamp,:version,:usr,:usr_id);";
             _insertRelationCmd.Parameters.Add(new SQLiteParameter(@"id", DbType.Int64));
             _insertRelationCmd.Parameters.Add(new SQLiteParameter(@"changeset_id", DbType.Int64));
@@ -139,18 +133,16 @@ namespace OsmSharp.Db.SQLite.Streams
             _insertRelationCmd.Parameters.Add(new SQLiteParameter(@"usr_id", DbType.Int64));
 
             _insertRelationTagsCmd = _connection.CreateCommand();
-            _insertRelationTagsCmd.Transaction = _transaction;
-            _insertRelationTagsCmd.CommandText = @"INSERT OR REPLACE INTO relation_tags (relation_id,relation_version,key,value) VALUES (:relation_id,:relation_version,:key,:value);";
+            _insertRelationTagsCmd.Transaction = _insertRelationCmd.Transaction;
+            _insertRelationTagsCmd.CommandText = @"INSERT OR REPLACE INTO relation_tags (relation_id,key,value) VALUES (:relation_id,:key,:value);";
             _insertRelationTagsCmd.Parameters.Add(new SQLiteParameter(@"relation_id", DbType.Int64));
-            _insertRelationTagsCmd.Parameters.Add(new SQLiteParameter(@"relation_version", DbType.Int32));
             _insertRelationTagsCmd.Parameters.Add(new SQLiteParameter(@"key", DbType.String));
             _insertRelationTagsCmd.Parameters.Add(new SQLiteParameter(@"value", DbType.String));
 
             _insertRelationMembersCmd = _connection.CreateCommand();
-            _insertRelationMembersCmd.Transaction = _transaction;
-            _insertRelationMembersCmd.CommandText = @"INSERT OR REPLACE INTO relation_members (relation_id,relation_version,member_type,member_id,member_role,sequence_id) VALUES (:relation_id,:relation_version,:member_type,:member_id,:member_role,:sequence_id);";
+            _insertRelationMembersCmd.Transaction = _insertRelationCmd.Transaction;
+            _insertRelationMembersCmd.CommandText = @"INSERT OR REPLACE INTO relation_members (relation_id,member_type,member_id,member_role,sequence_id) VALUES (:relation_id,:member_type,:member_id,:member_role,:sequence_id);";
             _insertRelationMembersCmd.Parameters.Add(new SQLiteParameter(@"relation_id", DbType.Int64));
-            _insertRelationMembersCmd.Parameters.Add(new SQLiteParameter(@"relation_version", DbType.Int32));
             _insertRelationMembersCmd.Parameters.Add(new SQLiteParameter(@"member_type", DbType.Int32));
             _insertRelationMembersCmd.Parameters.Add(new SQLiteParameter(@"member_id", DbType.Int64));
             _insertRelationMembersCmd.Parameters.Add(new SQLiteParameter(@"member_role", DbType.String));
@@ -165,9 +157,13 @@ namespace OsmSharp.Db.SQLite.Streams
         {
             if (!node.Latitude.HasValue || !node.Longitude.HasValue)
             {
-                // cannot insert nodes without lat/lon.
                 throw new ArgumentOutOfRangeException("node", "Cannot insert nodes without lat/lon.");
             }
+            if (!node.Visible.HasValue || !node.Visible.Value)
+            {
+                throw new ArgumentOutOfRangeException("History db stream target only supports visible objects.");
+            }
+
 
             // insert the node.
             _insertNodeCmd.Parameters[0].Value = node.Id;
@@ -181,6 +177,7 @@ namespace OsmSharp.Db.SQLite.Streams
             _insertNodeCmd.Parameters[4].Value = node.Visible.ConvertToDBValue();
             _insertNodeCmd.Parameters[5].Value = this.ConvertDateTime(node.TimeStamp);
             _insertNodeCmd.Parameters[6].Value = Tiles.Tile.CreateAroundLocation(node.Latitude.Value, node.Longitude.Value, Constants.DefaultZoom).Id;
+
             _insertNodeCmd.Parameters[7].Value = node.Version.ConvertToDBValue();
             _insertNodeCmd.Parameters[8].Value = node.UserName;
             _insertNodeCmd.Parameters[9].Value = node.UserId.ConvertToDBValue();
@@ -192,9 +189,8 @@ namespace OsmSharp.Db.SQLite.Streams
                 foreach (var tag in node.Tags)
                 {
                     _insertNodeTagsCmd.Parameters[0].Value = node.Id;
-                    _insertNodeTagsCmd.Parameters[1].Value = node.Version.Value;
-                    _insertNodeTagsCmd.Parameters[2].Value = tag.Key;
-                    _insertNodeTagsCmd.Parameters[3].Value = tag.Value;
+                    _insertNodeTagsCmd.Parameters[1].Value = tag.Key;
+                    _insertNodeTagsCmd.Parameters[2].Value = tag.Value;
                     _insertNodeTagsCmd.ExecuteNonQuery();
                 }
             }
@@ -205,6 +201,11 @@ namespace OsmSharp.Db.SQLite.Streams
         /// </summary>
         public override void AddWay(Way way)
         {
+            if (!way.Visible.HasValue || !way.Visible.Value)
+            {
+                throw new ArgumentOutOfRangeException("History db stream target only supports visible objects.");
+            }
+
             long? id = way.Id;
             bool? visible = way.Visible;
             _insertWayCmd.Parameters[0].Value = id.ConvertToDBValue();
@@ -223,9 +224,8 @@ namespace OsmSharp.Db.SQLite.Streams
                     if (!string.IsNullOrEmpty(key))
                     {
                         _insertWayTagsCmd.Parameters[0].Value = id;
-                        _insertWayTagsCmd.Parameters[1].Value = way.Version.Value;
-                        _insertWayTagsCmd.Parameters[2].Value = key;
-                        _insertWayTagsCmd.Parameters[3].Value = tag.Value;
+                        _insertWayTagsCmd.Parameters[1].Value = key;
+                        _insertWayTagsCmd.Parameters[2].Value = tag.Value;
                         _insertWayTagsCmd.ExecuteNonQuery();
                     }
                 }
@@ -235,9 +235,8 @@ namespace OsmSharp.Db.SQLite.Streams
                 for (int n = 0; n < way.Nodes.Length; n++)
                 {
                     _insertWayNodesCmd.Parameters[0].Value = id;
-                    _insertWayNodesCmd.Parameters[1].Value = way.Version.Value;
-                    _insertWayNodesCmd.Parameters[2].Value = way.Nodes[n];
-                    _insertWayNodesCmd.Parameters[3].Value = n;
+                    _insertWayNodesCmd.Parameters[1].Value = way.Nodes[n];
+                    _insertWayNodesCmd.Parameters[2].Value = n;
                     _insertWayNodesCmd.ExecuteNonQuery();
                 }
             }
@@ -249,6 +248,11 @@ namespace OsmSharp.Db.SQLite.Streams
         /// <param name="relation"></param>
 		public override void AddRelation(Relation relation)
         {
+            if (!relation.Visible.HasValue || !relation.Visible.Value)
+            {
+                throw new ArgumentOutOfRangeException("History db stream target only supports visible objects.");
+            }
+
             long? id = relation.Id;
             bool? visible = relation.Visible;
             _insertRelationCmd.Parameters[0].Value = id.ConvertToDBValue();
@@ -264,9 +268,8 @@ namespace OsmSharp.Db.SQLite.Streams
                 foreach (var tag in relation.Tags)
                 {
                     _insertRelationTagsCmd.Parameters[0].Value = id;
-                    _insertRelationTagsCmd.Parameters[1].Value = relation.Version.Value;
-                    _insertRelationTagsCmd.Parameters[2].Value = tag.Key;
-                    _insertRelationTagsCmd.Parameters[3].Value = tag.Value;
+                    _insertRelationTagsCmd.Parameters[1].Value = tag.Key;
+                    _insertRelationTagsCmd.Parameters[2].Value = tag.Value;
                     _insertRelationTagsCmd.ExecuteNonQuery();
                 }
             }
@@ -276,11 +279,10 @@ namespace OsmSharp.Db.SQLite.Streams
                 {
                     var simpleRelationMember = relation.Members[n];
                     _insertRelationMembersCmd.Parameters[0].Value = id;
-                    _insertRelationMembersCmd.Parameters[1].Value = relation.Version.Value;
-                    _insertRelationMembersCmd.Parameters[2].Value = this.ConvertMemberType(simpleRelationMember.Type);
-                    _insertRelationMembersCmd.Parameters[3].Value = simpleRelationMember.Id;
-                    _insertRelationMembersCmd.Parameters[4].Value = simpleRelationMember.Role;
-                    _insertRelationMembersCmd.Parameters[5].Value = n;
+                    _insertRelationMembersCmd.Parameters[1].Value = this.ConvertMemberType(simpleRelationMember.Type);
+                    _insertRelationMembersCmd.Parameters[2].Value = simpleRelationMember.Id;
+                    _insertRelationMembersCmd.Parameters[3].Value = simpleRelationMember.Role;
+                    _insertRelationMembersCmd.Parameters[4].Value = n;
                     _insertRelationMembersCmd.ExecuteNonQuery();
                 }
             }
@@ -309,16 +311,6 @@ namespace OsmSharp.Db.SQLite.Streams
                 return dateTime.Value.ToUnixTime();
             }
             return null;
-        }
-
-        /// <summary>
-        /// Flushes this target.
-        /// </summary>
-        public override void Flush()
-        {
-            base.Flush();
-
-            _transaction.Commit();
         }
 
         /// <summary>

@@ -37,7 +37,7 @@ namespace OsmSharp.Db.SQLite.Schema
         /// <summary>
         /// Detects a snapshot db.
         /// </summary>
-        public static bool SnapshotDbDetect(SQLiteConnection connection)
+        public static bool SnapshotDbDetect(this SQLiteConnection connection)
         {
             //check if Simple Schema table exists
             const string sql = "SELECT count(*) FROM sqlite_master WHERE type='table' AND name='node';";
@@ -52,7 +52,7 @@ namespace OsmSharp.Db.SQLite.Schema
         /// <summary>
         /// Creates/detects the snapshot db schema.
         /// </summary>
-        public static void SnapshotDbCreateAndDetect(SQLiteConnection connection)
+        public static void SnapshotDbCreateAndDetect(this SQLiteConnection connection)
         {
             if (!SnapshotDbDetect(connection))
             {
@@ -65,7 +65,7 @@ namespace OsmSharp.Db.SQLite.Schema
         /// <summary>
         /// Drops the snapshot schema.
         /// </summary>
-        public static void SnapshotDbDropSchema(SQLiteConnection connection)
+        public static void SnapshotDbDropSchema(this SQLiteConnection connection)
         {
             _logger.Log(TraceEventType.Information, "Dropping snapshot database schema...");
             ExecuteSQL(connection, "SnapshotDbSchemaDROP.sql");
@@ -74,7 +74,7 @@ namespace OsmSharp.Db.SQLite.Schema
         /// <summary>
         /// Deletes all data in the snapshot schema.
         /// </summary>
-        public static void SnapshotDbDeleteAll(SQLiteConnection connection)
+        public static void SnapshotDbDeleteAll(this SQLiteConnection connection)
         {
             _logger.Log(TraceEventType.Information, "Delete all data in snapshot database schema...");
             ExecuteSQL(connection, "SnapshotDbSchemaDELETE.sql");
@@ -83,7 +83,7 @@ namespace OsmSharp.Db.SQLite.Schema
         /// <summary>
         /// Detects a history db.
         /// </summary>
-        public static bool HistoryDbDetect(SQLiteConnection connection)
+        public static bool HistoryDbDetect(this SQLiteConnection connection)
         {
             //check if Simple Schema table exists
             const string sql = "SELECT count(*) FROM sqlite_master WHERE type='table' AND name='node';";
@@ -98,7 +98,7 @@ namespace OsmSharp.Db.SQLite.Schema
         /// <summary>
         /// Creates/detects the history db schema.
         /// </summary>
-        public static void HistoryDbCreateAndDetect(SQLiteConnection connection)
+        public static void HistoryDbCreateAndDetect(this SQLiteConnection connection)
         {
             //check if Simple Schema table exists
             const string sql = "SELECT count(*) FROM sqlite_master WHERE type='table' AND name='node';";
@@ -120,7 +120,7 @@ namespace OsmSharp.Db.SQLite.Schema
         /// <summary>
         /// Deletes all data in the history schema.
         /// </summary>
-        public static void HistoryDbDeleteAll(SQLiteConnection connection)
+        public static void HistoryDbDeleteAll(this SQLiteConnection connection)
         {
             _logger.Log(TraceEventType.Information, "Deleting all data in this database schema...");
             ExecuteSQL(connection, "HistoryDbSchemaDELETE.sql");
@@ -138,7 +138,7 @@ namespace OsmSharp.Db.SQLite.Schema
         /// <summary>
         /// Executes the sql in the given resource file.
         /// </summary>
-        private static void ExecuteSQL(SQLiteConnection connection, string resourceFilename)
+        private static void ExecuteSQL(this SQLiteConnection connection, string resourceFilename)
         {
             using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(
                 "OsmSharp.Db.SQLite.Schema." + resourceFilename))
